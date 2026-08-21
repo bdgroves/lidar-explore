@@ -32,3 +32,5 @@ snowflake_creds.json
 .env
 
 data/*.tif.aux.xml
+data/nuuksio_detected_trees_wgs84.csv
+data/nuuksio_snowflake.png
