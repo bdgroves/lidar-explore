@@ -5,6 +5,7 @@
 data/*.tif
 data/*.png
 data/nuuksio_detected_trees.csv
+data/nuuksio_detected_trees_wgs84.csv
 
 # Python
 __pycache__/
