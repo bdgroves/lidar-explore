@@ -1,0 +1,31 @@
+﻿# Pixi environment
+.pixi/
+
+# Generated pipeline outputs
+data/*.tif
+data/*.png
+data/nuuksio_detected_trees.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Snowflake credentials — never commit
+*.pem
+*.p8
+snowflake_creds.json
+.env
