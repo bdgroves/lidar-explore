@@ -36,3 +36,11 @@ data/nuuksio_detected_trees_wgs84.csv
 data/nuuksio_snowflake.png
 data/Latvusmalli_indeksi.gpkg
 data/metsakeskus/
+data/*.csv
+data/*.gpkg
+data/*.tif
+data/*.png
+data/metsakeskus/
+data/Latvusmalli_indeksi.gpkg
+data/nuuksio_detected_trees_wgs84.csv
+data/stands_joined.gpkg
