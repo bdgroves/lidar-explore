@@ -29,3 +29,5 @@ desktop.ini
 *.p8
 snowflake_creds.json
 .env
+
+data/*.tif.aux.xml
