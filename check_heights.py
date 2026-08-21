@@ -1,0 +1,25 @@
+﻿import pandas as pd
+d = pd.read_csv("data/stand_validation.csv")
+v = d[(d.det_stems >= 10) & d.meanheight.notna()]
+print(f"n stands   {len(v)}")
+print()
+print("--- HEIGHT: does detection bracket the inventory? ---")
+print(f"  inventory mean h      {v.meanheight.mean():6.2f}")
+print(f"  CHM all pixels        {v.chm_mean_h.mean():6.2f}   ({(v.chm_mean_h-v.meanheight).mean():+.2f})")
+print(f"  detected stems only   {v.det_mean_h.mean():6.2f}   ({(v.det_mean_h-v.meanheight).mean():+.2f})")
+print(f"  canopy fraction       {v.canopy_frac.mean():6.2f}   (>{5.0}m pixels)")
+print(f"  corr  chm_px  vs inv  {v[['chm_mean_h','meanheight']].corr().iloc[0,1]:.3f}")
+print(f"  corr  det_stem vs inv {v[['det_mean_h','meanheight']].corr().iloc[0,1]:.3f}")
+print()
+print("--- VOLUME sanity (m3/ha) ---")
+print(v.volume.describe(percentiles=[.05,.25,.5,.75,.95]).round(1).to_string())
+print(f"  over 500 m3/ha:  {int((v.volume>500).sum())} of {len(v)}  ({100*(v.volume>500).mean():.1f}%)")
+print(f"  over 700 m3/ha:  {int((v.volume>700).sum())}")
+print()
+print("--- implied check: volume vs basal area ---")
+v2 = v[v.basalarea.notna() & (v.basalarea > 0)]
+r = v2.volume / v2.basalarea
+print(f"  volume/basalarea ratio  mean {r.mean():.2f}  median {r.median():.2f}")
+print("  (form factor x height; for 25m spruce expect roughly 12-16)")
+print(f"  basalarea  mean {v2.basalarea.mean():.1f}  median {v2.basalarea.median():.1f} m2/ha")
+print("  (mature southern Finland spruce typically 25-35)")

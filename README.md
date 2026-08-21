@@ -1,51 +1,95 @@
 # lidar-explore
 
-Learning airborne LiDAR point cloud processing with Python + PDAL, applied to
-a synthetic Finnish boreal forest modeled on **Nuuksio National Park**
-(Haukkalampi area, ~30 km NW of Helsinki).
+Learning airborne LiDAR and canopy-height processing with Python + PDAL, from a
+synthetic Finnish boreal forest through to real national data validated against
+the Finnish Forest Centre's forest inventory.
 
-The workflow mirrors what commercial forestry operators like Weyerhaeuser are
-building at scale: from raw point cloud → ground/canopy separation → individual
-tree detection → structured features loaded into a data warehouse.
+The workflow mirrors what commercial forestry operators are building at scale:
+raw point cloud → ground/canopy separation → individual tree detection →
+structured features in a warehouse → stand-level management decisions.
+
+---
+
+## What this project actually establishes
+
+Four results, in the order found. Each corrected something believed earlier,
+which is the point.
+
+**1. Local-max detection scores well on sparse synthetic forest, and the score
+is partly an artifact.** 78.4% recall, 98.6% precision on the synthetic sample —
+but that stand is ~28 stems/ha, so crowns barely overlap. Thinning the cloud to
+0.5 p/m² *raised* recall to 81.8% while precision fell to 92.0% and height RMSE
+quadrupled from 0.44 m to 1.63 m. A sparse CHM has more empty cells than filled
+ones; nodata-as-zero creates spurious local maxima, some of which land near real
+trees. **Recall is gameable by noise; height error is not.** Height RMSE is the
+honest density metric.
+
+**2. Coarser CHM cells cost more than sparse points.** A 2 m CHM scored worse
+than 1 m at every density tested, and birch — wide, flat crowns — degraded
+worst. Resolution was the binding constraint, not point count.
+
+**3. Cross-epoch canopy bias is invisible to ground calibration.** On real
+Forest Centre CHMs for 2008/2015/2020, the bare-ground median offset was
++0.00 m for every epoch pair — perfect ground agreement. But binning change on
+an *independent* third epoch (to remove regression to the mean) showed 2008→2020
+gains nearly flat across every height band, +0.25 to +0.32 m/yr including 28 m+
+stands that should be near-asymptotic. A constant gain regardless of tree size
+is an additive offset: the 2008 flight under-measured **canopy** while measuring
+**ground** correctly. The 2015→2020 pair has the opposite problem, showing
+negative increment in mature bands — standing forest does not shrink.
+**Neither pair supports an absolute growth rate.** Relative ranking survives an
+additive bias; absolute current-annual-increment does not.
+
+**4. Detection measures height well and counts stems poorly — quantified
+against a national inventory.** Across real stands on sheet L4132D:
+
+| | value |
+|---|---|
+| stem recovery, median | **16.3%** of inventory stems/ha |
+| by class: 02 young / 03 advanced / 04 mature | 12% / 15% / **17%** |
+| detected-stem height vs inventory mean | **+1.19 m**, r = **0.962** |
+| whole-pixel CHM height vs inventory mean | −3.95 m, r = 0.901 |
+
+All on the same 1,295 stands: private forest, usable development class, and
+inventory observed within 6 years of the CHM epoch.
+
+Recovery rises monotonically with maturity — fewer, larger, better-separated
+crowns are easier to resolve. And the estimator matters: mean over *detected
+stems* brackets inventory mean from above (crown apexes), while mean over *all
+pixels* sits below it because it averages in canopy gaps. Same raster, opposite
+sign, and the stem-based estimator correlates better.
+
+Filtering to vintage-matched inventory measurably improved agreement: the
+detected-stem correlation rose from 0.907 on all comparable stands to 0.962
+once stands measured more than 6 years from the CHM epoch were dropped.
+
+**Plus one clean negative result.** Harvest ranking was benchmarked against
+5,059 real cutting proposals. Once stands are filtered to development class 04
+(*uudistuskypsä*, regeneration-mature), **471 of 472 eligible stands were
+already proposed for cutting** — base rate 100%, lift 1.00×. The forester's own
+maturity call determines the list; the CHM adds no discriminating power on top.
+Reported because it is true, not because it flatters the method.
 
 ---
 
 ## Pipeline
 
 ```
-nuuksio_sample.laz  (raw point cloud)
-        │
-        ▼
-   inspect_laz.py         → density, extent, classification breakdown
-        │
-        ▼
-  nuuksio_workflow.py     → PDAL pipeline
-        │                    ├─ filter to ground   → DEM (bare-earth raster)
-        │                    └─ height-above-ground → CHM (canopy heights)
-        ▼
-  data/nuuksio_dem.tif
-  data/nuuksio_chm.tif
-        │
-        ▼
-   detect_trees.py        → local-max on CHM → detected tree tops
-        │                    (matched against ground-truth CSV)
-        ▼
-  data/nuuksio_detected_trees.csv
-        │
-        ▼
-  load_to_snowflake.py    → reproject 3067→4326, TO_GEOGRAPHY,
-                             spatial SQL, round-trip visualization
+SYNTHETIC TRACK (ground truth known)
+  nuuksio_sample.laz
+        ├─ inspect_laz.py        density, extent, classification
+        ├─ nuuksio_workflow.py   PDAL: ground → DEM, hag_nn → CHM
+        ├─ detect_trees.py       local-max detection, scored vs truth
+        ├─ density_study.py      thin the cloud, measure error vs density
+        └─ load_to_snowflake.py  GEOGRAPHY table + spatial SQL
+
+REAL TRACK (Finnish Forest Centre open data)
+  fetch_metsakeskus.py     index-driven CHM tile download + crop
+  chm_change.py            multi-epoch change, bias diagnostics
+  stand_validate.py        detection vs inventory, targeting vs plan
+  harvest_targeting.py     stand ranking with retention-tree selection
+  make_maps.py             publication figures
 ```
-
----
-
-## Prerequisites
-
-- **[pixi](https://pixi.sh)** — package/env manager (handles PDAL, GDAL, PROJ
-  cleanly on Windows without pip pain)
-- **git**
-- Optional: [QGIS](https://qgis.org) to visually browse the DEM/CHM GeoTIFFs
-- Optional: a Snowflake account for the final step
 
 ---
 
@@ -54,155 +98,151 @@ nuuksio_sample.laz  (raw point cloud)
 ```powershell
 git clone git@github.com:bdgroves/lidar-explore.git
 cd lidar-explore
-
-# Solve and install the pixi environment from pixi.lock
 pixi install
-
-# Activate the environment
 pixi shell
 ```
 
-You should see `(lidar-explore)` in your prompt. `python`, `pdal`, `gdalinfo`
-etc. all resolve inside the env.
+Requires [pixi](https://pixi.sh) — handles PDAL, GDAL, PROJ, geopandas and
+rasterio cleanly on Windows. Optional: QGIS for browsing rasters, Snowflake for
+the warehouse step.
 
 ---
 
-## Run the workflow
-
-Run these in order from the project root, inside `pixi shell`:
+## Synthetic track
 
 ```powershell
-# 1. Inspect the sample point cloud
-python inspect_laz.py
-
-# 2. Build DEM + CHM + overview visualization
-python nuuksio_workflow.py
-
-# 3. Detect individual trees, compare against ground truth
-python detect_trees.py
-
-# 4. Load to Snowflake and run spatial queries (see auth section below)
-python load_to_snowflake.py
+python inspect_laz.py       # 1,034,754 pts over 405 x 403 m = 6.34 p/m2
+python nuuksio_workflow.py  # DEM + CHM + overview
+python detect_trees.py      # scored against 450 known trees
+python density_study.py     # error vs point density
 ```
 
-Each step writes outputs into `data/` and opens a matplotlib window.
-
-### Regenerating the sample data (optional)
-
-The sample LiDAR file is committed to the repo, but if you want to modify or
-regenerate it:
-
-```powershell
-python generate_nuuksio.py
+```
+Ground truth 450   detected 358   TP 353   FP 5   FN 97
+Recall 78.4%   Precision 98.6%   F1 87.4%   height RMSE 0.44m
+spruce 88.2%   pine 73.1%   birch 68.3%
 ```
 
-The generator uses a fixed random seed so output is deterministic.
+Density study, 1 m CHM:
+
+```
+ p/m2   detected  recall  precision  height RMSE
+ 0.49       400    81.8%     92.0%       1.63m
+ 1.05       366    78.9%     97.0%       1.14m
+ 2.10       361    79.1%     98.6%       0.76m
+ 3.16       362    78.2%     97.2%       0.60m
+ 6.31       358    78.4%     98.6%       0.44m
+```
+
+Read the RMSE column, not recall. See result 1.
+
+**Caveat carried throughout:** the synthetic stand is ~28 stems/ha. Real managed
+Finnish forest on sheet L4132D measures ~496 stems/ha median and ~444 in mature
+class-04 stands. An earlier draft cited 800–1,500 — that range applies to young
+unthinned stands, not forest at rotation age.
 
 ---
 
-## Detection results
+## Real data: Finnish Forest Centre
 
-Running `detect_trees.py` on the committed sample gives:
+Two open datasets, CC BY 4.0, no registration, no API key.
 
-```
-Ground truth trees:  450
-Detected peaks:      358
-True positives:      353
-False positives:     5
-False negatives:     97
+**Latvusmalli** — 1 m canopy height model, 6 km × 6 km tiles, EPSG:3067,
+derived from the licensed 5 p laser data. `fetch_metsakeskus.py` reads the
+published GeoPackage index (download URL + precomputed stats per tile).
 
-Recall:     78.4%    ← % of real trees found
-Precision:  98.6%    ← % of detections that were real
-F1:         87.4%
-
-Recall by species:
-  spruce:  88.2%   (tall narrow cones — easiest)
-  pine  :  73.1%
-  birch :  68.3%   (wide flat crowns — hardest)
-
-Height RMSE: 0.44m, bias -0.24m
+```powershell
+python fetch_metsakeskus.py --sheet L4132D --year all --list
+python fetch_metsakeskus.py --sheet L4132D --year 2020 --crop 364000 6685000 365000 6686000
 ```
 
-These numbers are in the same range as published Finnish forest inventory
-studies using single-return local-max detection.
+**Metsävarakuviot** — stand polygons with inventory, proposed operations and
+restrictions. Relational GeoPackage, ten tables.
 
-**Caveat worth stating plainly:** the synthetic stand is sparse — roughly
-28 stems/ha at ground truth, where real Finnish boreal forest runs 800–1,500
-stems/ha. Crowns barely overlap, which is the easy case for local-max
-detection. Expect materially worse recall on real data.
+Note: **MML "Laser scanning data 5 p" is not free** — it needs payment and
+Finnish strong authentication, not practically available to non-residents. The
+free 0.5 p product is 13× sparser than this project's synthetic sample. The
+Forest Centre CHM is the better free route, being derived from the licensed data.
+
+### Schema gotchas that silently corrupt results
+
+* `treestand.type`: **1 = observed, 2 = projected to 2026, 3 = projected to
+  2036.** Joining a projection compares your raster to a simulation.
+* `treestandsummary` exists **only for types 2 and 3**. Observed inventory is in
+  `treestratum`, per species, and `stemcount` there is null — derive density as
+  `N = G / (π/4 · d²)` from basal area and mean diameter.
+* Observation dates span **1999–2024**. A 2020 raster against a 1999
+  measurement reads as detection error when it is two decades of growth.
+  `stand_validate.py` filters to ±6 years (219 of 1,779 stands excluded).
+* Attributes for classes **A0 and T1 are documented as unusable** by the
+  producer. Dropped, not silently compared.
+* Metsävarakuviot covers **private** forest only — 2,165 ha of the 3,600 ha
+  sheet. State land including Nuuksio National Park is absent, so absence is
+  treated as a **whitelist block**. A blacklist would fail open on any gap.
+
+### Development classes (kehitysluokka)
+
+| code | Finnish | English |
+|---|---|---|
+| A0 | aukea | open / clearcut |
+| T1 | pieni taimikko | seedlings ≤1.3 m |
+| T2 | varttunut taimikko | advanced seedlings >1.3 m |
+| Y1 | ylispuustoinen taimikko | seedlings under overstory |
+| 02 | nuori kasvatusmetsikkö | young thinning stand |
+| 03 | varttunut kasvatusmetsikkö | advanced thinning stand |
+| 04 | uudistuskypsä metsikkö | **regeneration-mature** |
+
+Class 04 replaced an earlier Chapman-Richards age model. A forester's own
+maturity judgement beats inverting a growth curve with an assumed site index
+(which also clamped at age 181 for any stand taller than the assumed H100).
 
 ---
 
-## Snowflake integration
-
-`load_to_snowflake.py` reprojects the detections from EPSG:3067 (TM35FIN) to
-EPSG:4326 (WGS84, required by Snowflake `GEOGRAPHY`), stages them via
-`write_pandas`, builds a typed table with `TO_GEOGRAPHY`, and runs spatial SQL.
-
-Both coordinate systems are kept in the final table on purpose: `GEOGRAPHY` for
-true-meter distance operations like `ST_DWITHIN`, and the projected TM35FIN
-coords for equal-area grid binning. At 60°N a degree of longitude is about half
-a degree of latitude on the ground, so lat/lon cells would be badly non-square.
-
-### Auth
-
-Credentials come from environment variables only — nothing is written to disk.
-Key-pair auth is preferred: no password, no MFA prompt, works unattended.
+## Change detection
 
 ```powershell
-$env:SNOWFLAKE_ACCOUNT   = "<ORG>-<ACCOUNT>"
-$env:SNOWFLAKE_USER      = "<USER>"
-$env:SNOWFLAKE_ROLE      = "ACCOUNTADMIN"
-$env:SNOWFLAKE_WAREHOUSE = "COMPUTE_WH"
-$env:SNOWFLAKE_DATABASE  = "LIDAR_DB"
-$env:SNOWFLAKE_SCHEMA    = "NUUKSIO"
-
-$env:SNOWFLAKE_PRIVATE_KEY_FILE = "C:\Users\<you>\.snowflake\keys\rsa_key.p8"
-$env:SNOWFLAKE_PRIVATE_KEY_PWD  = "<passphrase>"   # if key is encrypted
+python chm_change.py --all-pairs --by-height --no-viz
+python chm_change.py --a 2008 --b 2020 --bin-on 2015 --by-height
 ```
 
-Setting `SNOWFLAKE_PRIVATE_KEY_FILE` selects `snowflake_jwt` automatically.
-For password auth instead, set `SNOWFLAKE_AUTHENTICATOR=snowflake` and
-`SNOWFLAKE_PASSWORD` — but note that an explicitly-set `SNOWFLAKE_AUTHENTICATOR`
-overrides the key-file default, which is a common way to get a confusing
-`250001 Incorrect username or password`.
+Two diagnostics matter more than the change map itself:
 
-Create the target objects once:
+**Ground offset** — median difference over pixels bare in the earlier epoch.
+Non-zero means systematic processing bias. All three pairs returned +0.00 m,
+and told us nothing about canopy.
 
-```sql
-CREATE DATABASE IF NOT EXISTS LIDAR_DB;
-CREATE SCHEMA IF NOT EXISTS LIDAR_DB.NUUKSIO;
-```
+**Height-stratified increment** — real height growth declines steeply with tree
+size. Gains flat across bands, or rising with height, indicate bias not biology.
+Use `--bin-on` with a third epoch to define bins; otherwise regression to the
+mean drags the top bands down and can invert the conclusion. It did, in an
+earlier run: the pair that looked textbook-clean was the biased one.
 
-Dry-run mode reprojects and previews without connecting at all:
+---
+
+## Stand validation
 
 ```powershell
-python load_to_snowflake.py --dry-run
+python stand_validate.py --year 2020 --top 15
 ```
 
-### Query results
+Joins detection to stand polygons, compares against observed inventory, scores
+ranking against the management plan. Writes `data/stand_validation.csv`.
 
-```
-1. Height distribution
-   6-10m      2 trees, mean 7.9m
-   10-20m    37 trees, mean 17.9m
-   20-30m   182 trees, mean 25.9m
-   30m+     137 trees, mean 33.4m
+---
 
-2. Ten tallest trees — max 36.1m, matching the CHM max
+## Snowflake
 
-3. Neighbors within 15m (ST_DWITHIN self-join)
-   mean 1.43, max 6, 74 trees fully isolated
+`load_to_snowflake.py` reprojects EPSG:3067 → 4326, stages via `write_pandas`,
+builds a `TO_GEOGRAPHY` table, runs spatial SQL.
 
-4. Stem density on a 50m grid
-   62 occupied cells, densest 56 stems/ha, mean 23 stems/ha
-```
+Both coordinate systems are kept deliberately: `GEOGRAPHY` for true-metre
+`ST_DWITHIN`, projected TM35FIN for equal-area grid binning. At 60°N a degree
+of longitude is about half a degree of latitude on the ground, so lat/lon cells
+would be badly non-square.
 
-Two readings worth noting. A 400 m plot on a 50 m grid is exactly 64 cells, and
-the query found 62 occupied — the two empty cells are the lake, so the SQL
-independently recovered the water body. And the height histogram is nearly empty
-in the 6–10 m band despite `MIN_HEIGHT_M = 6.0`, which is where the 97 misses
-live: the understory is what local-max is failing to see.
+Key-pair auth preferred, credentials from environment only. `write_pandas` needs
+**pyarrow** and `quote_identifiers=False` — the default quotes identifiers,
+creating case-sensitive columns that make every later `SELECT` fail mysteriously.
 
 ---
 
@@ -210,82 +250,41 @@ live: the understory is what local-max is failing to see.
 
 ```
 lidar-explore/
-├── data/
-│   ├── nuuksio_sample.laz              (committed: 8.9 MB input)
-│   ├── nuuksio_tree_truth.csv          (committed: ground truth)
-│   ├── nuuksio_dem.tif                 (generated, gitignored)
-│   ├── nuuksio_chm.tif                 (generated, gitignored)
-│   ├── nuuksio_detected_trees.csv      (generated, gitignored)
-│   ├── nuuksio_detected_trees_wgs84.csv(generated, gitignored)
-│   ├── nuuksio_overview.png            (generated, gitignored)
-│   ├── nuuksio_detection.png           (generated, gitignored)
-│   └── nuuksio_snowflake.png           (generated, gitignored)
-├── generate_nuuksio.py            Synthetic sample generator
-├── inspect_laz.py                 Point cloud summary
-├── build_chm.py                   Earlier CHM script (WA sample era)
-├── nuuksio_workflow.py            Main DEM + CHM + viz
-├── detect_trees.py                Local-max tree detection + eval
-├── load_to_snowflake.py           GEOGRAPHY load + spatial SQL
-├── pixi.toml                      Environment spec
-├── pixi.lock                      Resolved dependency lock
-├── README.md
-├── CLAUDE_CONTEXT.md              Pickup prompt for continuing with Claude
-└── .gitignore
+├── data/                      generated + downloaded (gitignored)
+├── generate_nuuksio.py        synthetic sample generator
+├── inspect_laz.py             point cloud summary
+├── nuuksio_workflow.py        DEM + CHM
+├── detect_trees.py            local-max detection + evaluation
+├── density_study.py           error vs point density
+├── load_to_snowflake.py       GEOGRAPHY load + spatial SQL
+├── fetch_metsakeskus.py       real CHM tile fetch + crop
+├── chm_change.py              multi-epoch change + bias diagnostics
+├── stand_validate.py          detection vs inventory, plan benchmark
+├── harvest_targeting.py       stand ranking + retention trees
+├── make_maps.py               publication figures
+├── REPORT.md                  full write-up
+└── CLAUDE_CONTEXT.md          pickup prompts
 ```
-
----
-
-## What's coming next
-
-The synthetic track is complete end to end. Two directions from here:
-
-**1. Better detection — variable-window local max.** The fixed 7 m window is
-tuned for the average crown, so it over-smooths short trees and can split wide
-birch crowns. Standard fix is a window that scales with CHM height (taller
-pixel → wider window). Target: recover some of the 97 understory misses without
-giving up the 98.6% precision. This is measurable on the synthetic data because
-we have ground truth.
-
-**2. Real data.** The synthetic stand is sparse and clean. Real tiles bring
-overlapping crowns, variable pulse density, noise, and files 30–100× larger.
-Important: real data has **no ground truth**, so recall and precision become
-uncomputable — the question shifts from "how accurate is detection" to "does
-the pipeline survive real point clouds." Those are different projects.
-
----
-
-## Getting real LiDAR
-
-- **USGS 3DEP** (Washington / Pacific Northwest): `apps.nationalmap.gov/lidar-explorer/`
-  Direct S3 downloads, no email queue. Also exposes EPT (Entwine Point Tile)
-  endpoints that PDAL can read remotely with `readers.ept`, cropping to a small
-  AOI without downloading the whole tile. Coordinate systems vary by project —
-  usually a State Plane or UTM zone, so the scripts need a CRS parameter rather
-  than the hardcoded EPSG:3067.
-- **MML** (Finnish National Land Survey): `tiedostopalvelu.maanmittauslaitos.fi/tp/kartta`
-  Toggle English (top-right). Product: **"Laser scanning data, 5 p"**. Zoom to a
-  forested area, click a 3km × 3km tile, add to cart, checkout (free, no
-  account). Download link arrives by email. Tiles are 300 MB – 1 GB — use PDAL
-  `filters.crop` to slice a ~400 m × 400 m subset first. Coordinate system is
-  EPSG:3067, same as the synthetic, so the scripts run nearly unchanged.
 
 ---
 
 ## Notes / gotchas
 
-- **Never name a Python file the same as a stdlib module.** Especially
-  `inspect.py`, `email.py`, `code.py`. Learned this the hard way — the file is
-  `inspect_laz.py` deliberately.
-- The `.pixi/` folder is huge and gitignored. `pixi install` recreates it from
-  `pixi.lock` on any machine.
-- The `filters.hag_nn` PDAL stage requires classified ground points. Our
-  synthetic sample is pre-classified. Real MML tiles usually are too, but if
-  yours isn't, add a `filters.smrf` stage before `hag_nn` to classify ground.
-- `write_pandas` needs **pyarrow**, which conda-forge's
-  `snowflake-connector-python` does not always pull in. It is now an explicit
-  dependency in `pixi.toml`.
-- `write_pandas` defaults to `quote_identifiers=True`, which creates
-  case-sensitive quoted column names and makes every later `SELECT` fail
-  mysteriously. This repo passes `False` and uses uppercase column names.
-- `CURRENT_ACCOUNT()` returns the account *locator*, which is a different string
-  from the `ORG-ACCOUNT` identifier used to connect. Both are correct.
+* Never name a Python file after a stdlib module — hence `inspect_laz.py`.
+* `filters.hag_nn` needs classified ground; add `filters.smrf` first if absent.
+* `maximum_filter` defaults to reflect mode at borders and can create spurious
+  edge peaks. Test by shifting the AOI: if clusters follow the edge it's an
+  artifact, if they stay put it's geography.
+* Binning change on the same epoch you are differencing induces regression to
+  the mean. Bin on an independent epoch when one exists.
+* One-sided sanity checks miss half the failure modes. A growth check bounded
+  only above passed −0.10 m/yr in mature forest without comment.
+* Sorted lists always look alarming at the top. An earlier concern about
+  639 m³/ha volumes dissolved on seeing the median (206) and 95th pct (406).
+
+---
+
+## Attribution
+
+Canopy height models and forest resource data:
+**Suomen metsäkeskus / Finnish Forest Centre**, CC BY 4.0.
