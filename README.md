@@ -244,6 +244,30 @@ mapped across the real tile.
 
 ---
 
+## API
+
+The validated stand data is also queryable live, not just through scripts:
+
+```powershell
+pixi run uvicorn api:app --reload
+```
+
+Then hit `http://127.0.0.1:8000/docs` for interactive Swagger docs, or:
+
+```
+GET /stands?developmentclass=04&limit=10   # filter stands by class, area, eligibility
+GET /stands/{standid}                       # single stand, full detection + inventory record
+GET /summary                                # live-computed validation stats for the current data
+```
+
+Built on FastAPI over the same `data/stand_validation.csv` that
+`stand_validate.py` produces — no separate demo dataset, no mock data. The
+`/summary` endpoint is explicit about which population it's scoring against,
+since it's a live query rather than the hand-curated 1,295-stand set
+documented above.
+
+---
+
 ## Snowflake
 
 `load_to_snowflake.py` reprojects EPSG:3067 -> 4326, stages via
@@ -270,6 +294,7 @@ the build instead of failing quietly. See `lidar_dbt/README.md`.
 
 ```
 lidar-explore/
++-- api.py                     FastAPI service over the validated stand data
 +-- data/                      generated + downloaded (gitignored)
 +-- data/web/                  compressed figures for this README
 +-- lidar_dbt/                 dbt models over the validated stand data
