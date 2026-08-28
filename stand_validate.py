@@ -278,6 +278,16 @@ def analyse(gdf, chm, transform, bounds, chm_year):
     sub["chm_mean_h"] = np.where(px > 0, px_sum / np.maximum(px, 1), np.nan)
     sub["canopy_frac"] = np.where(px > 0, px_tree / np.maximum(px, 1), np.nan)
 
+    # What fraction of the stand's own area actually has CHM data at all.
+    # Distinct from canopy_frac (tree cover within covered area) -- this
+    # catches stands that straddle a tile boundary or a nodata gap, where
+    # low detection reflects missing data rather than a detection failure.
+    sub["coverage_pct"] = np.where(
+        sub["poly_ha"] > 0,
+        (sub["px_ha"] / sub["poly_ha"]).clip(upper=1.0) * 100.0,
+        0.0,
+    )
+
     # Eligibility, in the order a forester would apply it
     sub["obs_gap"] = (chm_year - sub["obs_year"]).abs()
     sub["fresh_inv"] = sub["obs_gap"] <= MAX_OBS_GAP_YEARS
@@ -562,7 +572,7 @@ if __name__ == "__main__":
     cols = ["standid", "poly_ha", "developmentclass", "maintreespecies",
             "meanage", "meanheight", "stemcount", "basalarea", "volume",
             "det_stems", "det_stems_ha", "det_mean_h", "chm_mean_h",
-            "canopy_frac", "restricted", "op_cut", "cut_year",
+            "canopy_frac", "coverage_pct", "restricted", "op_cut", "cut_year",
             "obs_year", "obs_gap", "fresh_inv", "usable_inv", "eligible"]
     cols = [c for c in cols if c in sub.columns]
     sub[cols].to_csv(OUT_STANDS, index=False)

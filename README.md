@@ -329,6 +329,13 @@ lidar-explore/
   bounded only above passed -0.10 m/yr in mature forest without comment.
 * Sorted lists always look alarming at the top. An earlier concern about
   639 m3/ha volumes dissolved on seeing the median (206) and 95th pct (406).
+* A stand can show near-zero detected stems for a reason that has nothing to
+  do with the algorithm: it straddles the CHM tile boundary. `coverage_pct`
+  (added to `stand_validate.py` and exposed via the API) catches this --
+  110 of 1,840 stands have under 50% CHM coverage. One, stand 38780079,
+  inventory says 462 stems/ha and 99% canopy cover, detector found 2 trees --
+  because only 3.7% of that stand actually has CHM data. Check coverage
+  before trusting a low-recovery outlier.
 
 ---
 

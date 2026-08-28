@@ -65,6 +65,7 @@ class Stand(BaseModel):
     det_mean_h: Optional[float] = None
     chm_mean_h: Optional[float] = None
     canopy_frac: Optional[float] = None
+    coverage_pct: Optional[float] = None
     restricted: Optional[int] = None
     op_cut: Optional[int] = None
     obs_year: Optional[float] = None
