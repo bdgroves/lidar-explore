@@ -1,0 +1,26 @@
+version: 2
+
+sources:
+  - name: nuuksio
+    database: LIDAR_DB
+    schema: NUUKSIO
+    description: >
+      Finnish Forest Centre forest resource data for map sheet L4132D, joined to
+      canopy-height-model tree detection results. Loaded by
+      load_stands_to_snowflake.py. Source data licensed CC BY 4.0.
+    tables:
+      - name: stands
+        description: One row per forest stand polygon, with GEOGRAPHY geometry.
+        columns:
+          - name: standid
+            description: Forest Centre stand identifier.
+            tests: [unique, not_null]
+          - name: geom
+            description: >
+              Stand boundary as GEOGRAPHY (WGS84). NULL where the source polygon
+              self-intersects and Snowflake rejected it - 7 of 1,840 stands.
+          - name: devclass
+            description: >
+              Silvicultural development class: 02 young thinning, 03 advanced
+              thinning, 04 regeneration-mature, T1/T2 seedling, A0 open,
+              Y1 seedling under overstory, NA unclassified.

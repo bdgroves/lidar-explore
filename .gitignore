@@ -44,3 +44,18 @@ data/metsakeskus/
 data/Latvusmalli_indeksi.gpkg
 data/nuuksio_detected_trees_wgs84.csv
 data/stands_joined.gpkg
+
+# dbt: commit the models/tests, never the env or build output
+lidar_dbt/.dbt-venv/
+lidar_dbt/target/
+lidar_dbt/logs/
+lidar_dbt/dbt_packages/
+
+# SQLite/GeoPackage lock files
+*.gpkg-shm
+*.gpkg-wal
+
+# GDAL sidecars and misc build output
+data/*.aux.xml
+data/*.pdf
+*.zip

@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: stg_stands
+    description: Typed passthrough of the loaded stand table. No filtering.
+    columns:
+      - name: standid
+        tests: [unique, not_null]
+      - name: area_ha
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+
+  - name: int_stands_comparable
+    description: >
+      Defines the comparable population once, with every exclusion named and
+      flagged rather than silently applied. Downstream marts filter on
+      is_comparable so they cannot disagree about sample size.
+    columns:
+      - name: standid
+        tests: [unique, not_null]
+      - name: is_comparable
+        tests: [not_null]
+      - name: stem_recovery_ratio
+        description: detected stems / inventory stems, per stand.
+
+  - name: fct_detection_by_class
+    description: >
+      Detection performance by development class. Recovery should rise
+      monotonically with maturity - asserted in
+      tests/assert_recovery_rises_with_maturity.sql
+    columns:
+      - name: development_class
+        tests: [unique, not_null]
+      - name: recovery_pct
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 2
+              max_value: 100
+
+  - name: fct_height_estimators
+    description: >
+      The same raster measured two ways, landing on opposite sides of the
+      inventory value. Bracketing is asserted in
+      tests/assert_height_estimators_bracket.sql
+    columns:
+      - name: estimator
+        tests:
+          - unique
+          - accepted_values:
+              values: ['detected stems', 'all chm pixels']
+      - name: correlation
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0.5
+              max_value: 1.0
+
+  - name: fct_benchmark_pools
+    description: >
+      Base rate by candidate pool, with an explicit saturation verdict. Exists
+      so that a benchmark which cannot demonstrate skill says so on its face.
+    columns:
+      - name: pool
+        tests: [unique, not_null]
+      - name: base_rate_pct
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100
+
+  - name: fct_volume_by_class
+    description: Standing volume by development class, area-weighted.
+    columns:
+      - name: development_class
+        tests: [unique, not_null]
+      - name: pct_of_total
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100

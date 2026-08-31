@@ -1,0 +1,20 @@
+# Copy into ~/.dbt/profiles.yml (merge with any existing profiles).
+# Passphrase comes from the environment, never from this file.
+#
+#   $env:SNOWFLAKE_PRIVATE_KEY_PWD = "..."
+
+lidar_forest:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: AMEJZES-CAB92741
+      user: BDGROVES
+      role: ACCOUNTADMIN
+      warehouse: COMPUTE_WH
+      database: LIDAR_DB
+      schema: NUUKSIO
+      private_key_path: C:\Users\brook\.snowflake\keys\rsa_key.p8
+      private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PWD') }}"
+      threads: 4
+      client_session_keep_alive: false

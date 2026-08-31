@@ -1,0 +1,33 @@
+name: lidar_forest
+version: 1.0.0
+config-version: 2
+
+profile: lidar_forest
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Inventory observations span 1999-2024 while the CHM is 2020. Comparing a
+  # 2020 raster to a 1999 measurement reads as detection error when it is
+  # really two decades of growth. Six years is the tolerance; keeping it a var
+  # means the sensitivity of every downstream number is testable.
+  max_obs_gap_years: 6
+
+  # Below this, per-stand statistics are too noisy to mean much.
+  min_stand_ha: 0.3
+
+  # Development class 04 = uudistuskypsa, regeneration-mature.
+  mature_class: '04'
+
+models:
+  lidar_forest:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table
