@@ -503,6 +503,16 @@ happens to be more fun when the terrain is real.
 
 ---
 
+## Related
+
+**[project-kiva](https://github.com/bdgroves/project-kiva)** — the same
+discipline pointed at archaeology instead of forestry. A 1,150-year-old floor
+plan pulled out of raw laser returns at Chaco Canyon, the pyramids at Giza,
+a documented failure under the rainforest at Tikal, and a 3DEP metadata trap
+that turns five published "epochs" into two actual surfaces.
+
+---
+
 ## Attribution
 
 Canopy height models and forest resource data:
