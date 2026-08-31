@@ -268,6 +268,87 @@ documented above.
 
 ---
 
+## Where do the machines go? Terrain planning for the stands already chosen
+
+The harvest-ranking result above is a clean negative: filtered to development
+class 04, the CHM adds no discriminating power over the forester's own
+maturity call. **Which** stand to cut is already decided.
+
+Terrain answers a question the plan does not. In Nordic forestry the dominant
+environmental problem is not stand selection, it is **rutting** -- a loaded
+forwarder churning saturated soil, shearing roots and delivering sediment to
+watercourses. The standard mitigation is timing: wet ground is cut frozen.
+
+That needs a terrain model, which the CHM is not -- canopy height is height
+*above* ground, so it carries no elevation. Finland's National Land Survey
+publishes a 1 m DTM for the whole country, and CSC mirrors it as an open VRT
+with no API key:
+
+```
+https://vm0160.kaj.pouta.csc.fi/mml/korkeusmalli/km2/2020/km2_2020.vrt
+```
+
+The VRT points at 60 tiles of 100 km each over plain HTTP. Reading the one
+tile covering L4132D and windowing to the sheet takes 18 seconds and no full
+download.
+
+![Machine planning for sheet L4132D](data/web/machine_planning.jpg)
+
+From that DTM, two measures per stand:
+
+* **slope** -- an access problem. Steep ground limits machines and raises
+  erosion risk.
+* **TWI**, `ln(a / tan b)` -- a scheduling problem. High values mark where
+  water collects.
+
+Of **653 stands in class 04 with a cutting proposal**:
+
+| Season (wetness) | n | | Access (slope) | n |
+|---|---:|---|---|---:|
+| summer-trafficable | 609 | | conventional | 476 |
+| dry season preferred | 43 | | winch assist advised | 145 |
+| frozen-ground only | 1 | | steep - review access | 32 |
+
+**Only 3 stands are both wet and steep.** The two constraints land on almost
+entirely different stands, so they decompose into separate planning problems
+rather than one blended risk score.
+
+### Two things this got wrong first
+
+**Merging the constraints.** The first version summed wet and steep into one
+"sensitivity" number and derived a single season label from it. Stands that
+were 89% steep came out labelled `summer-trafficable`, because the season rule
+only ever looked at wetness. Wet and steep have different mitigations --
+schedule versus winch -- so they are now separate flags. A blended score
+would have hidden exactly the stands that need attention.
+
+**Counting nulls as findings.** The map first reported 45 wet and 178 steep
+against the script's 44 and 177. Stands too small to sample (<5 cells) carry a
+null label, and `!= "summer-trafficable"` is true for nulls. Two phantom
+stands, from a comparison that treated missing as flagged.
+
+### What this is not
+
+The thresholds are **percentiles of this sheet**, not absolute limits.
+Real bearing capacity depends on soil texture, machine weight, tyre and track
+configuration and season -- none of which are in this data. The output ranks
+these stands against each other; it is not a trafficability model, and the
+class boundaries would need calibration against observed rutting before
+anyone drove on them.
+
+One structural caveat: TWI carries `tan(slope)` in its denominator, so wet and
+steep are anti-correlated partly **by construction**. The near-total
+separation between the two groups is therefore not an independent discovery,
+though it is also consistent with the obvious hydrology -- water does not pool
+on a 30-degree rock face.
+
+```powershell
+python machine_planning.py            # DTM -> slope + TWI -> per-stand stats
+python machine_planning_fig.py        # the figure above
+```
+
+---
+
 ## Snowflake
 
 `load_to_snowflake.py` reprojects EPSG:3067 -> 4326, stages via
@@ -308,6 +389,8 @@ lidar-explore/
 +-- chm_change.py              multi-epoch change + bias diagnostics
 +-- stand_validate.py          detection vs inventory, plan benchmark
 +-- harvest_targeting.py       stand ranking + retention trees
++-- machine_planning.py        slope + TWI per stand, harvest scheduling
++-- machine_planning_fig.py    machine-planning figure
 +-- make_maps.py               publication figures
 +-- REPORT.md                  full write-up
 +-- CLAUDE_CONTEXT.md          pickup prompts
