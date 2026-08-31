@@ -59,3 +59,8 @@ lidar_dbt/dbt_packages/
 data/*.aux.xml
 data/*.pdf
 *.zip
+
+# WA FPA study: cached inputs (re-fetch with --fetch)
+data/wa_fpa/dem.tif
+data/wa_fpa/fpa.gpkg
+data/wa_fpa/*.png

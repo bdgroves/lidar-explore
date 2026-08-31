@@ -349,6 +349,74 @@ python machine_planning_fig.py        # the figure above
 
 ---
 
+## Washington: testing terrain against a real regulator's decision
+
+The machine-planning thresholds above are percentiles I chose. Nothing
+external says a stand at the 85th percentile of wetness is actually a problem.
+That is the weakest part of that analysis.
+
+Washington supplies the missing standard. DNR publishes every **Forest
+Practices Application** as an open polygon layer, and each carries
+`UNSTABLE_SLOPE_FLG` — the agency's own determination, made by their staff
+under the Forest Practices rules, of whether the proposal involves potentially
+unstable slopes. That is a real label. So: **does terrain-derived slope
+predict it?**
+
+Study area is Pacific Cascade region, SW Washington, deliberately spanning the
+steep Willapa Hills and the flat Cowlitz floodplain. The label there is almost
+exactly balanced, so the baseline to beat is a coin flip.
+
+![Slope vs DNR unstable-slope flag](data/web/wa_fpa.jpg)
+
+**1,024 applications, base rate 50.6% flagged:**
+
+| Metric | Not flagged | Flagged | AUC |
+|---|---:|---:|---:|
+| mean slope | 8.1° | 16.5° | 0.860 |
+| 90th-pct slope | 15.3° | 27.9° | 0.857 |
+| **max slope** | **24.9°** | **42.6°** | **0.879** |
+
+A single threshold at 33.7° max slope classifies **80.4%** of applications
+correctly against a 50.6% base rate. Unlike the Finnish harvest-ranking null,
+terrain here carries real signal.
+
+### The unit of analysis was wrong first
+
+The first run scored 1,533 individual harvest units and got AUC 0.854. But
+the flag never varies between units sharing an `FP_ID` — zero applications out
+of 1,024. `UNSTABLE_SLOPE_FLG` is an **application** attribute, so unit-level
+scoring is pseudo-replication: 1,533 rows are only 1,024 independent
+decisions, and an application subdivided into 17 units would carry 17 times
+the weight of one drawn as a single polygon.
+
+Aggregating to the application — the actual unit of decision — the result is
+both smaller and stronger: n=1,024, AUC 0.879. The script now reports both so
+the difference is visible rather than buried.
+
+### Why a high AUC here is not a discovery
+
+The rules define unstable landforms **partly by gradient**. Recovering the
+flag from slope is therefore closer to reproducing a known determination from
+one of its own inputs than to finding something new. The honest claim is that
+the pipeline reproduces an operational decision it was never shown — useful as
+validation, not as insight.
+
+The residual is the interesting part. At the best threshold, **127
+applications are steep but not flagged** and **74 are flagged but not steep**.
+Those are where gradient alone diverges from the rule, which also names
+specific landforms — inner gorges, convergent headwalls, bedrock hollows —
+that a 10 m DEM cannot resolve and a gradient threshold cannot express. A
+1 m lidar DTM and curvature-based landform detection is the obvious next step,
+and the flagged-but-flat group is the set to check it against.
+
+```powershell
+python wa_fpa.py --fetch     # DNR polygons + 3DEP DEM windows
+python wa_fpa.py             # unit-level vs application-level test
+python wa_fpa_fig.py         # figure + disagreement cases
+```
+
+---
+
 ## Snowflake
 
 `load_to_snowflake.py` reprojects EPSG:3067 -> 4326, stages via
@@ -389,6 +457,8 @@ lidar-explore/
 +-- chm_change.py              multi-epoch change + bias diagnostics
 +-- stand_validate.py          detection vs inventory, plan benchmark
 +-- harvest_targeting.py       stand ranking + retention trees
++-- wa_fpa.py                  WA harvest applications vs terrain slope
++-- wa_fpa_fig.py              WA FPA figure + disagreement cases
 +-- machine_planning.py        slope + TWI per stand, harvest scheduling
 +-- machine_planning_fig.py    machine-planning figure
 +-- make_maps.py               publication figures
