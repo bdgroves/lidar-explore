@@ -1,5 +1,9 @@
 # lidar-explore
 
+<p align="center">
+  <img src="assets/lidar-explore-banner.jpg" alt="LiDAR Explore: from point clouds to forest intelligence" width="100%"/>
+</p>
+
 **Some people chase storms. I chase trees — through a hundred million points
 of laser noise, into a national forest inventory, and out the other side with
 numbers that survived contact with reality.**
