@@ -35,15 +35,23 @@ jobs:
         with: {cache: false, locked: false}
       - name: Synthetic track
         run: |
+          set -o pipefail
           mkdir -p logs
           pixi run python inspect_laz.py           2>&1 | tee logs/inspect_laz.txt
           pixi run python nuuksio_workflow.py      2>&1 | tee logs/nuuksio_workflow.txt
           pixi run python detect_trees.py          2>&1 | tee logs/detect_trees.txt
           pixi run python density_study.py --no-viz 2>&1 | tee logs/density_study.txt
       - name: Fetch the open data
-        run: pixi run python fetch_open_data.py 2>&1 | tee logs/fetch.txt
+        run: |
+          set -o pipefail
+          for u in https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi.zip \
+                   https://juuri-storagezone-files-prod.s3.eu-west-1.amazonaws.com/Public/Latvusmalli/Latvusmalli_indeksi.zip; do
+            curl -sSIL -A "Mozilla/5.0" "$u" | grep -iE "^HTTP|^location|^server|^content-length" | tee -a logs/probe.txt
+          done
+          pixi run python fetch_open_data.py 2>&1 | tee logs/fetch.txt
       - name: Real track
         run: |
+          set -o pipefail
           pixi run python chm_change.py --all-pairs --by-height --no-viz --no-tif 2>&1 | tee logs/chm_change_all.txt
           pixi run python chm_change.py --a 2008 --b 2020 --bin-on 2015 --by-height --no-viz --no-tif 2>&1 | tee logs/chm_change_binned.txt
           pixi run python stand_validate.py --year 2020 --no-viz 2>&1 | tee logs/stand_validate.txt

@@ -28,6 +28,11 @@ import fetch_metsakeskus as fm
 
 DATA = Path("data")
 INDEX_ZIP_URL = "https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi.zip"
+# avoin.metsakeskus.fi redirects into this public bucket; some networks are refused at
+# the front door but not here.
+S3 = "https://juuri-storagezone-files-prod.s3.eu-west-1.amazonaws.com/Public"
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+      "Chrome/126.0 Safari/537.36")
 DTM_VRT = "https://vm0160.kaj.pouta.csc.fi/mml/korkeusmalli/km2/2020/km2_2020.vrt"
 
 # The stand inventory is published per map sheet (karttalehti). The exact file
@@ -40,10 +45,22 @@ MV_CANDIDATES = [
 ]
 
 
+def alternates(url: str):
+    """The URL, then the same file straight from the storage bucket."""
+    yield url
+    pre = "https://avoin.metsakeskus.fi/aineistot/"
+    if url.startswith(pre):
+        yield S3 + "/" + url[len(pre):]
+
+
 def get(url: str, dest: Path) -> bool:
+    return any(get_one(u, dest) for u in alternates(url))
+
+
+def get_one(url: str, dest: Path) -> bool:
     tmp = dest.with_suffix(dest.suffix + ".part")
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "lidar-explore rebuild"})
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
         with urllib.request.urlopen(req, timeout=300) as r, open(tmp, "wb") as f:
             shutil.copyfileobj(r, f, length=1 << 20)
     except Exception as e:                                     # noqa: BLE001
@@ -86,7 +103,9 @@ def fetch_chm(sheet: str, years) -> tuple:
     for t in tiles:
         if str(t["year"]) not in want:
             continue
-        path = fm.download(t)
+        path = fm.OUT_DIR / f"{t['name']}.tif"
+        if not path.exists() and not get(t["url"], path):
+            raise SystemExit(f"could not download {t['name']}")
         std = fm.OUT_DIR / f"CHM_{sheet}_{t['year']}.tif"   # the name stand_validate.py reads
         if path != std and not std.exists():
             shutil.copyfile(path, std)
