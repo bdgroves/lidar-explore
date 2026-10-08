@@ -1,0 +1,75 @@
+name: Rebuild
+
+# Re-runs the whole pipeline from the open data, on a clean Linux machine:
+# the synthetic track from the sample in the repo, then the real track from
+# the Finnish Forest Centre and National Land Survey downloads. It is the
+# "does all of this still work" check, and it builds the data behind the
+# project page (docs/data). Results and logs land on the `rebuild-results`
+# branch so every number can be compared with the README.
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - "*.py"
+      - "pixi.toml"
+      - ".github/workflows/rebuild.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rebuild
+  cancel-in-progress: true
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      MPLBACKEND: Agg
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: prefix-dev/setup-pixi@v0.9.0
+        with: {cache: false, locked: false}
+      - name: Synthetic track
+        run: |
+          mkdir -p logs
+          pixi run python inspect_laz.py           2>&1 | tee logs/inspect_laz.txt
+          pixi run python nuuksio_workflow.py      2>&1 | tee logs/nuuksio_workflow.txt
+          pixi run python detect_trees.py          2>&1 | tee logs/detect_trees.txt
+          pixi run python density_study.py --no-viz 2>&1 | tee logs/density_study.txt
+      - name: Fetch the open data
+        run: pixi run python fetch_open_data.py 2>&1 | tee logs/fetch.txt
+      - name: Real track
+        run: |
+          pixi run python chm_change.py --all-pairs --by-height --no-viz --no-tif 2>&1 | tee logs/chm_change_all.txt
+          pixi run python chm_change.py --a 2008 --b 2020 --bin-on 2015 --by-height --no-viz --no-tif 2>&1 | tee logs/chm_change_binned.txt
+          pixi run python stand_validate.py --year 2020 --no-viz 2>&1 | tee logs/stand_validate.txt
+      - name: WA FPA (from the committed tables)
+        run: pixi run python wa_fpa.py --fetch 2>&1 | tee logs/wa_fpa.txt || true
+      - name: Web data
+        if: hashFiles('build_web_data.py') != ''
+        run: pixi run python build_web_data.py 2>&1 | tee logs/build_web_data.txt
+      - name: Publish results to the rebuild-results branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/r && cp -r logs /tmp/r/ 2>/dev/null || true
+          cp data/*.csv /tmp/r/ 2>/dev/null || true
+          cp data/*.png /tmp/r/ 2>/dev/null || true
+          ls -la data data/metsakeskus > /tmp/r/files.txt 2>&1 || true
+          cd /tmp/r && git init -q -b rebuild-results
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -q -m "rebuild ${GITHUB_SHA::7}"
+          git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" rebuild-results
+      - name: Commit the page data
+        if: hashFiles('build_web_data.py') != ''
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data
+          git diff --cached --quiet && exit 0
+          git commit -q -m "page data from rebuild ${GITHUB_SHA::7} [skip ci]"
+          for i in 1 2 3; do git pull -q --rebase origin main && git push -q && exit 0; sleep 5; done

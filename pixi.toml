@@ -2,10 +2,14 @@
 authors = ["brooksg <brooksg@zillowgroup.com>"]
 channels = ["conda-forge"]
 name = "lidar-explore"
-platforms = ["win-64"]
+platforms = ["win-64", "linux-64"]
 version = "0.1.0"
 
 [tasks]
+synthetic = "python nuuksio_workflow.py && python detect_trees.py && python density_study.py"
+fetch = "python fetch_open_data.py"
+validate = "python stand_validate.py --year 2020 --no-viz"
+web = "python build_web_data.py"
 
 [dependencies]
 python = "3.12.*"
