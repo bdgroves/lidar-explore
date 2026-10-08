@@ -334,7 +334,7 @@
       if (p.inv_n) html += row("Stems found", Math.round(p.det_n) + " of " + Math.round(p.inv_n) + " /ha");
       if (p.cov != null && p.cov < 99) html += row("Has canopy data", fmt(p.cov, 0) + "%");
       html += row("Cutting proposed", p.op_cut ? "yes" : "no");
-      if (!p.validated) html += '<tr><td colspan="2">Not in the validation set (old, unusable or no inventory)</td></tr>';
+      if (!p.validated) html += '<tr><td colspan="2">Not in the validation set (old, unusable or missing inventory, under 0.3 ha, or fewer than ten detected trees)</td></tr>';
       return html + "</table></div>";
     }
     var layer = L.geoJSON(stands, { style: style, onEachFeature: function (f, l) { l.bindPopup(pop(f.properties)); } }).addTo(map);
@@ -363,10 +363,10 @@
       var s2 = real.inventory_source, tot = s2.field + s2.remote_sensed + s2.other;
       $("inv-source").textContent = "One caution on that correlation. Of the " + tot.toLocaleString("en-US") + " stands checked, " +
         s2.remote_sensed.toLocaleString("en-US") + " have an inventory the Forest Centre interpreted from airborne laser data, and " + s2.field +
-        (s2.field === 1 ? " was" : " were") + " measured in the field. So this is largely laser checked against laser, which flatters the agreement. The stem-count gap is a different matter: the inventory's stem numbers come from models calibrated on field sample plots, which count the suppressed trees that a laser looking down at the canopy can't pick out one by one.";
+        (s2.field === 1 ? " was" : " were") + " measured in the field. Most are dated 2020, the year of the canopy model, so they may even come from the same flight. This is largely laser checked against laser, which flatters the agreement. The stem-count gap is a different matter: the inventory's stem numbers come from models calibrated on field sample plots, which count the suppressed trees that a laser looking down at the canopy can't pick out one by one.";
     }
     if (real.proposals) {
-      $("proposal-source").textContent = "The Forest Centre's 2025 data release explains why. Its cutting proposals are labelled by origin, and of the " +
+      $("proposal-source").textContent = "The Forest Centre's new data model explains why. Its cutting proposals are labelled by origin, and of the " +
         real.proposals.stands.toLocaleString("en-US") + " stands with one on this sheet, " + (real.proposals.field === 0 ? "none" : real.proposals.field === 1 ? "one" : real.proposals.field) +
         " came from a forester in the field. The rest are simulated by the Forest Centre's planning calculation from the same inventory. A model that proposes cutting for mature stands will propose it for nearly every mature stand.";
     }
@@ -375,7 +375,7 @@
         fmt(real.stem_recovery_median) + "% to " + fmt(real.stem_recovery_median_full_cov) + "%. The next version of the check should filter on it.";
     }
     $("map-cap").textContent = real.stands.toLocaleString("en-US") + " private forest stands on map sheet L4132D, " +
-      real.validated.toLocaleString("en-US") + " of them with a fresh, usable inventory to check against (filled). Click a stand for its numbers.";
+      real.validated.toLocaleString("en-US") + " of them in the validation set (filled): a usable inventory within six years of the 2020 flight, at least 0.3 ha and at least ten detected trees. Click a stand for its numbers.";
 
     /* the negative result */
     var grid = $("grid472"), html = "";
@@ -433,8 +433,8 @@
     setK("truth", syn.metrics.truth);
     var m = syn.metrics;
     $("hero-score").textContent = "On this forest the method found " + m.tp + " of " + m.truth + " trees (" + fmt(m.recall) +
-      "%), and " + fmt(m.precision) + "% of its detections were real, with tree heights off by " + fmt(m.rmse, 2) +
-      " m on average (RMSE). Spruce " + fmt(m.by_species.spruce) + "%, pine " + fmt(m.by_species.pine) + "%, birch " + fmt(m.by_species.birch) + "%.";
+      "%), and " + fmt(m.precision) + "% of its detections were real, with a height error (RMSE) of " + fmt(m.rmse, 2) +
+      " m. Spruce " + fmt(m.by_species.spruce) + "%, pine " + fmt(m.by_species.pine) + "%, birch " + fmt(m.by_species.birch) + "%.";
     return heroCloud(syn);
   }).catch(function (e) { console.error(e); $("cloud-load").textContent = "The point cloud didn't load."; });
   getJSON("density.json").then(densitySection).catch(console.error);

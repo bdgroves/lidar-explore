@@ -8,19 +8,20 @@
 point cloud, thin the laser, click any stand. ·
 [The story](https://brooksgroves.com/blog/finding-the-trees.html)
 
-**Some people chase storms. I chase trees — through a hundred million points
-of laser noise, into a national forest inventory, and out the other side with
+**Some people chase storms. I chase trees — through a million points of laser
+noise and 36 million canopy pixels, into a national forest dataset, and out the other side with
 numbers that survived contact with reality.**
 
 This project starts in a calm, controlled sandbox — a synthetic Finnish forest
 where every tree's exact location is already known — then drives straight into
-the real thing: raw airborne LiDAR over a live 6x6 km slice of Finland,
-validated stand-by-stand against 1,295 real records from the Finnish Forest
-Centre's national inventory. No held-out demo set. National data, real stands,
-the national forest plan's own cutting proposals used as the benchmark.
+the real thing: airborne LiDAR canopy height models over a 6x6 km slice of
+Finland, validated stand-by-stand against the Finnish Forest Centre's
+inventory (1,295 stands in the original run, 1,489 in the rebuild). No
+held-out demo set. National data, real stands, and the Forest Centre's own
+cutting proposals used as the benchmark.
 
 > **Rebuilt October 2026.** The whole pipeline now reruns from the open data on
-> GitHub Actions. Everything reproduced, and the Forest Centre's 2025 data
+> GitHub Actions. Everything reproduced, and the Forest Centre's new data
 > release corrected two claims this README used to make: the cutting proposals
 > are simulated by the Forest Centre's planning calculation, not foresters'
 > field calls, and nearly all of the "observed" inventory was interpreted from
@@ -63,15 +64,22 @@ point count.
 On real Forest Centre CHMs for 2008/2015/2020, the bare-ground median offset
 was +0.00 m for every epoch pair — perfect ground agreement, and it told us
 nothing about canopy. Binning change on an *independent* third epoch (to kill
-regression-to-the-mean) showed 2008-2020 gains nearly flat across every
-height band, +0.25 to +0.32 m/yr including 28 m+ stands that should be
-near-asymptotic. A constant gain regardless of tree size is an additive
-offset, not biology: the 2008 flight under-measured canopy while measuring
-ground correctly. Relative ranking survives an additive bias; absolute
+regression-to-the-mean) showed 2008-2020 gains nearly flat from 3 m up,
++0.25 to +0.32 m/yr including 28 m+ stands that should be near-asymptotic
+(the 0–3 m band is slightly negative, likely harvests between flights). A
+constant gain regardless of tree size looks like an additive offset, not
+biology; the likeliest reading is that the 2008 flight under-measured canopy
+while measuring ground correctly. Relative ranking survives an additive bias; absolute
 current-annual-increment does not.
 
-**4. Detection nails height, whiffs on stem count — and the harvest crews
-already knew.**
+**4. Detection nails height, whiffs on stem count — and the plan already
+knew.**
+
+Original run below; the rebuild on the new data model reproduces it (16.2%,
++1.18 m at r = 0.959, −4.01 m at r = 0.906 over 1,489 stands — see
+[Rebuilt from scratch](#rebuilt-from-scratch-october-2026)). Note that the
+inventory is itself laser-interpreted, so height agreement is partly laser
+against laser.
 
 | | value |
 |---|---|
@@ -89,11 +97,13 @@ pixels* sits below it because it averages in canopy gaps. Same raster,
 opposite sign; the stem-based estimator correlates better.
 
 **Plus one clean negative result, reported because it's true, not because it
-flatters the method.** Harvest ranking was benchmarked against 5,059 real
-cutting proposals. Once stands are filtered to development class 04
-(regeneration-mature), 471 of 472 eligible stands were already proposed for
+flatters the method.** Harvest ranking was benchmarked against 5,059
+cutting proposals (old data model; the new one lists 1,320, all but one
+simulated). Once stands are filtered to development class 04
+(regeneration-mature) and to the stands the ranking could pick, 471 of 472
+(rebuild: 545 of 547) eligible stands were already proposed for
 cutting — base rate 100%, lift 1.00x. The development class determines the
-list; the CHM adds no discriminating power on top of it. (The 2025 data
+list; the CHM adds no discriminating power on top of it. (The new data
 release shows why: the proposals are simulated by the Forest Centre's planning
 calculation from the inventory, so a mature stand is nearly always proposed.)
 
@@ -112,7 +122,7 @@ sheet, the stand inventory, the NLS 1 m DTM). Logs and tables land on the
 | | original run | rebuilt |
 |---|---|---|
 | synthetic: recall / precision / height RMSE | 78.4% / 98.6% / 0.44 m | identical |
-| density study, every row | | identical |
+| density study, every row | (published table) | identical |
 | stands on the sheet / private forest | 1,840 / 2,165 ha | identical |
 | stands with a usable, fresh inventory | 1,295 | 1,489 |
 | stem recovery, median | 16.3% | 16.2% |
@@ -132,7 +142,7 @@ What changed, and what it taught:
 * **The Forest Centre moved its downloads.** The CHM index is now under
   `Latvusmalli/Latvusmalli_indeksi/` and the stand data under `MV/` (was
   `Metsavarakuviot/`). Both scripts point at the new addresses.
-* **The stand data model changed (2025).** `treestand.type` became
+* **The stand data model changed (renewal begun 2025).** `treestand.type` became
   `treestandclass`, the date became `treedatadate`, development class and main
   species moved onto the tree stand, and cutting proposals got their own
   `cutting` table. `stand_validate.py` reads both models. Some stands now carry
@@ -263,14 +273,21 @@ licensed data.
 
 ### Schema gotchas that silently corrupt results
 
-* `treestand.type`: **1 = observed, 2 = projected to 2026, 3 = projected to
-  2036.** Joining a projection compares your raster to a simulation.
+* `treestand.type` (old model) / `treestandclass` (new model): **1 = observed
+  inventory, 2 = current state / projected to 2026, 3 = projected to 2036.**
+  Joining a projection compares your raster to a simulation.
 * `treestandsummary` exists **only for types 2 and 3**. Observed inventory is
-  in `treestratum`, per species, and `stemcount` there is null — derive
-  density as `N = G / (pi/4 * d^2)` from basal area and mean diameter.
+  in `treestratum`, per species. `stemcount` was null there in the old model
+  (the new one fills it for about a quarter of strata); density is derived as
+  `N = G / (pi/4 * d^2)` from basal area and mean diameter, which runs low
+  because the diameter is basal-area weighted.
 * Observation dates span **1999-2024**. A 2020 raster against a 1999
   measurement reads as detection error when it is two decades of growth.
-  `stand_validate.py` filters to +/-6 years (219 of 1,779 stands excluded).
+  `stand_validate.py` filters to +/-6 years (original run: 219 of 1,779 stands
+  excluded; on the new data, using each stand's newest inventory, 28 of 1,821).
+* Check where each inventory came from: in the new model
+  `treestanddatasource` 1 = field-measured, 2 = remote-sensed. On L4132D the
+  fresh inventories are almost all remote-sensed.
 * Attributes for classes **A0 and T1 are documented as unusable** by the
   producer. Dropped, not silently compared.
 * Metsavarakuviot covers **private** forest only — 2,165 ha of the 3,600 ha

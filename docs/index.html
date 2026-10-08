@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LiDAR Explore: finding the trees</title>
-<meta name="description" content="A forest read through a laser and checked against the foresters' own records: a synthetic Finnish forest with every tree known, then 1,295 real stands from Finland's national inventory, and a Washington regulator's slope calls.">
+<meta name="description" content="A forest read through a laser and checked against reality: a synthetic Finnish forest with every tree known, then 1,840 real stands checked against the Finnish Forest Centre's inventory, and a Washington regulator's slope calls.">
 <link rel="canonical" href="https://brooksgroves.com/lidar-explore/">
 <meta property="og:title" content="LiDAR Explore: finding the trees">
 <meta property="og:description" content="Point clouds to forest decisions, with every number checked against reality.">
@@ -119,7 +119,7 @@ table.data td.r,table.data th.r{text-align:right}
 
 <header class="hero" aria-label="A synthetic Finnish forest in airborne LiDAR">
   <canvas id="cloud" aria-label="3D point cloud of a 16-hectare synthetic Finnish forest. Drag to turn it, scroll or pinch to zoom."></canvas>
-  <div class="hero-load" id="cloud-load">Loading a million laser returns&hellip;</div>
+  <div class="hero-load" id="cloud-load">Loading the laser returns&hellip;</div>
   <div class="hero-tools">
     <div class="chipset" role="group" aria-label="Colour the points by">
       <button class="chip" data-color="height" aria-pressed="true">Height</button>
@@ -139,12 +139,12 @@ table.data td.r,table.data th.r{text-align:right}
 </header>
 
 <main>
-  <p class="col lede">Some people chase storms. I chase trees: through a million points of laser noise, into Finland's national forest inventory, and out the other side with numbers that survived contact with the real thing. The forest above is synthetic, with all <span class="num" data-k="truth">450</span> trees placed by a script, so the method can be graded. Then the same method goes to work on a real 36&nbsp;km&sup2; map sheet west of Helsinki and is checked, stand by stand, against Finland's national forest inventory.</p>
+  <p class="col lede">Some people chase storms. I chase trees: through a million points of laser noise, into the Finnish Forest Centre's stand records, and out the other side with numbers that survived contact with the real thing. The forest above is synthetic, with all <span class="num" data-k="truth">450</span> trees placed by a script, so the method can be graded. Then the same method goes to work on a real 36&nbsp;km&sup2; map sheet west of Helsinki and is checked, stand by stand, against the Finnish Forest Centre's forest inventory.</p>
   <p class="col small" id="hero-score"></p>
 
   <section class="col" aria-labelledby="f1">
     <h2 id="f1"><span class="n">Finding 1</span>The scoreboard lied</h2>
-    <p>Thin the laser points out and you'd expect tree detection to get worse. It didn't, at first. Recall went <em>up</em> as the cloud got sparser, while the height error quadrupled. At half a point per square metre, about one cell in eight of the canopy model gets no laser return at all, and treating those holes as zero breaks crowns into fake peaks, some of which happen to land near real trees.</p>
+    <p>Thin the laser points out and you'd expect tree detection to get worse. Recall didn't: it held near 78% all the way down to one point per square metre, then <em>rose</em> to 82% at half a point, while the height error nearly quadrupled. At that density about one cell in eight of the canopy model gets no laser return at all (one in twenty at full density, mostly the lake), and treating those holes as zero breaks crowns into fake peaks, some of which happen to land near real trees.</p>
     <p>Slide the density down and watch it happen: orange crosses are detections with no tree under them, orange rings are trees the method missed.</p>
   </section>
 
@@ -170,7 +170,7 @@ table.data td.r,table.data th.r{text-align:right}
 
   <section class="col" aria-labelledby="f2">
     <h2 id="f2"><span class="n">Finding 2</span>Resolution beat point count</h2>
-    <p>Building the canopy model on a 2&nbsp;m grid instead of 1&nbsp;m cost more than any amount of thinning did. At every density tested, the coarser grid found fewer trees, and birch, with its wide flat crowns, suffered most.</p>
+    <p>Building the canopy model on a 2&nbsp;m grid instead of 1&nbsp;m cost more trees than any amount of thinning did. At every density tested the coarser grid found fewer, and birch, with its wide flat crowns, ended up lowest every time. (Height error barely moved with the grid; it's the point count that wrecks height.)</p>
     <figure class="panel" style="margin:18px 0">
       <canvas class="plot" id="res-canvas" width="900" height="420" aria-label="Recall at 1 m and 2 m grids across point densities"></canvas>
       <figcaption>Recall at each density, 1&nbsp;m grid against 2&nbsp;m, all species and birch alone.</figcaption>
@@ -180,17 +180,17 @@ table.data td.r,table.data th.r{text-align:right}
   <section class="col" aria-labelledby="f3">
     <h2 id="f3"><span class="n">Finding 3</span>Perfect ground, biased canopy</h2>
     <p>The Forest Centre publishes canopy height models of the same sheet from several flights. Comparing 2008 with 2020, bare ground agreed to the centimetre: the median offset was <span class="num">+0.00&nbsp;m</span> for every pair of years. That told me nothing about the trees.</p>
-    <p>Real trees slow down as they get tall. So I grouped the change by each pixel's height in a third, independent year (2015) and looked at growth per band. From 3&nbsp;m up it came out nearly flat, about a quarter to a third of a metre a year, even in stands already over 28&nbsp;m, where the forest can plausibly add half that. A constant gain regardless of tree size is an offset, not biology: the 2008 flight measured the ground correctly and the canopy short. (The lowest band, mostly open ground and seedlings in 2015, went slightly backwards, which a constant offset can't explain either: that pair of flights shouldn't be trusted for growth at all.)</p>
+    <p>Real trees slow down as they get tall. So I grouped the change by each pixel's height in a third, independent year (2015) and looked at growth per band. From 3&nbsp;m up it came out nearly flat, about a quarter to a third of a metre a year, even in stands already over 28&nbsp;m, where the forest can plausibly add half that. A constant gain regardless of tree size looks like an offset, not biology, and the likeliest reading is that the 2008 flight measured the ground correctly and the canopy short. (The lowest band, mostly open ground in 2015, went slightly backwards, probably harvests between the flights, which this check doesn't remove. The dashed ceilings are my own rough limits, not a published growth table.)</p>
     <figure class="panel" style="margin:18px 0">
       <canvas class="plot" id="change-canvas" width="900" height="420" aria-label="Height gain per year by starting height band"></canvas>
-      <figcaption id="change-cap">Height gain per year, 2008 to 2020, grouped by height in 2015. The dashed line is what mature boreal forest can plausibly add.</figcaption>
+      <figcaption id="change-cap">Height gain per year, 2008 to 2020, grouped by height in 2015. Dashed lines are rough ceilings on what forest of that height can add.</figcaption>
     </figure>
     <p>Rankings survive a bias like this. Absolute growth rates don't.</p>
   </section>
 
   <section class="col" aria-labelledby="f4">
     <h2 id="f4"><span class="n">Finding 4</span>It nails height and misses most stems, and that's physics</h2>
-    <p>On the real sheet, the method finds about <span class="num" data-k="stem_recovery_median">16</span>% of the stems the inventory says are there. That sounds like failure until you remember what a laser from an aircraft sees: the tops of the trees that reach the canopy. The suppressed trees underneath don't make peaks. Recovery climbs as stands mature and crowns separate.</p>
+    <p>On the real sheet, the method finds about <span class="num" data-k="stem_recovery_median">16</span>% of the stems the inventory implies are there. That sounds like failure until you remember what a laser from an aircraft sees: the tops of the trees that reach the canopy. The suppressed trees underneath don't make peaks. Recovery climbs as stands mature and crowns separate.</p>
     <p>Height is a different story. The mean height of the detected tree tops tracks the inventory's mean height closely, about a metre high, with a correlation of <span class="num" data-k="det_h_r">0.96</span>. Averaging every pixel instead sits below the inventory, because it averages in the gaps. Same raster, opposite sign.</p>
     <p class="note" id="inv-source">One caution on that correlation. The inventory is the Forest Centre's, and most of it isn't a tape measure in the woods.</p>
   </section>
@@ -203,23 +203,23 @@ table.data td.r,table.data th.r{text-align:right}
     </div>
     <label class="layer-toggle"><input type="checkbox" id="chm-toggle" checked> Canopy height model, 2020</label>
     <div id="map" role="region" aria-label="Interactive map of forest stands west of Helsinki"></div>
-    <figcaption id="map-cap">Private forest stands on map sheet L4132D. Click a stand for its numbers. Stands without a fresh, usable inventory are drawn as outlines only.</figcaption>
+    <figcaption id="map-cap">Private forest stands on map sheet L4132D. Click a stand for its numbers. Stands outside the validation set are drawn as outlines only.</figcaption>
   </section>
 
   <section class="col" aria-labelledby="f5">
     <h2 id="f5"><span class="n">And one clean negative</span>The plan had already decided</h2>
-    <p>I built a ranking to pick which mature stands to harvest and scored it against the stands the forest plan proposes for cutting. It looked fine, until I counted the pool it was choosing from. Once stands are filtered to development class&nbsp;04, regeneration-mature, nearly every one is already on the cutting list. Here is that pool, one square per stand:</p>
-    <div class="grid472" id="grid472" aria-label="Eligible mature stands, coloured by whether foresters proposed cutting"></div>
+    <p>I built a ranking to pick which mature stands to harvest and scored it against the stands the forest plan proposes for cutting. It looked fine, until I counted the pool it was choosing from. Once stands are filtered to development class&nbsp;04, regeneration-mature, and to the ones my ranking could pick (unrestricted, at least 0.3&nbsp;ha, at least ten detected trees), nearly every one is already on the cutting list. Here is that pool, one square per stand:</p>
+    <div class="grid472" id="grid472" aria-label="Eligible mature stands, coloured by whether the plan proposes cutting"></div>
     <p class="small" id="grid472-cap"></p>
     <p>With a base rate that high there's nothing left to beat: development class is the list, and the canopy model adds no lift on top of it. I'm reporting that because it's true, not because it flatters the method.</p>
-    <p id="proposal-source">The Forest Centre's 2025 data release explains why. Its cutting proposals are labelled by origin, and on this sheet they're simulated by the Forest Centre's planning calculation from the same inventory, not marked by a forester walking the stand. A model that proposes cutting for mature stands will propose it for nearly every mature stand.</p>
+    <p id="proposal-source">The Forest Centre's new data model explains why. Its cutting proposals are labelled by origin, and on this sheet they're simulated by the Forest Centre's planning calculation from the same inventory, not marked by a forester walking the stand. A model that proposes cutting for mature stands will propose it for nearly every mature stand.</p>
   </section>
 
   <section class="col" aria-labelledby="machines">
     <h2 id="machines">Where the machines can go</h2>
-    <p>Which stand to cut is decided. Terrain answers a question the plan doesn't: when, and how. A loaded forwarder on saturated ground leaves ruts, tears roots and sends silt into streams, so wet ground is cut frozen. Steep ground needs a winch. From Finland's open 1&nbsp;m terrain model I measured both for every mature stand with a cutting proposal.</p>
+    <p>Which stand to cut is decided. Terrain answers a question the plan doesn't: when, and how. A loaded forwarder on saturated ground leaves ruts, tears roots and sends silt into streams, so wet ground is cut frozen. Steep ground needs a winch. From Finland's open elevation model, worked on a 2&nbsp;m grid, I measured both for every mature stand with a cutting proposal.</p>
     <div id="machine-table"></div>
-    <p>The two problems almost never land on the same stand, so they stay two flags with two fixes instead of one blended score. The first version did blend them, and labelled stands that were 89% steep as fine for summer driving. The thresholds are percentiles of this sheet, a ranking, not a rutting model.</p>
+    <p>The two problems almost never land on the same stand, so they stay two flags with two fixes instead of one blended score. The first version had only the wetness-based season label, so stands that were 89% steep came out "summer-trafficable" with no warning at all. They still drive fine in summer as far as wetness goes; now they also carry an access flag. The thresholds are percentiles of this sheet, a ranking, not a rutting model.</p>
   </section>
 
   <section class="col" aria-labelledby="wa">
@@ -250,12 +250,12 @@ table.data td.r,table.data th.r{text-align:right}
     <h2 id="lessons">Things that silently corrupt results</h2>
     <ul class="lessons">
       <li><b>Joining the wrong inventory.</b> Finland's stand records come in three flavours: observed, projected to 2026, projected to 2036. Join a projection and you're comparing a laser to a simulation.</li>
-      <li><b>Stale ground truth.</b> Observations run from 1999 to 2024. A 2020 raster against a 1999 measurement reads as detection error when it's two decades of growth. In the original run, keeping only inventories within six years of the flight moved the height correlation from 0.907 to 0.962.</li>
+      <li><b>Stale ground truth.</b> Observations run from 1999 to 2024. A 2020 raster against a 1999 measurement reads as detection error when it's two decades of growth. In the original run, keeping only inventories within six years of the flight moved the height correlation from 0.907 to 0.962. (On the current data most inventories are recent, and the filter drops only 28 stands.)</li>
       <li><b>Absence isn't permission.</b> The stand file covers private forest only. Nuuksio National Park simply isn't in it, so a missing stand is treated as off-limits, never as open.</li>
       <li><b>One decision, counted many times.</b> Washington's flag belongs to the application, not the harvest unit. Scoring units counted some decisions seventeen times.</li>
-      <li><b>Nulls that look like findings.</b> Stands too small to measure carried a null label, and "not summer-trafficable" is true for a null. Two phantom wet stands.</li>
-      <li><b>A stand on the edge of the tile.</b> One stand with 462 stems per hectare showed two detected trees, because only 3.7% of it had canopy data. Check coverage before trusting an outlier. <span id="cov-note"></span></li>
-      <li><b>A file format that changes under you.</b> The Forest Centre moved its downloads and renewed its stand data model in 2025. The script failed loudly, which is the good outcome: it named the missing column instead of quietly comparing the wrong things.</li>
+      <li><b>Nulls that look like findings.</b> Stands too small to measure carried a null label, and "not summer-trafficable" is true for a null. Two phantom stands, one wet, one steep.</li>
+      <li><b>A stand on the edge of the tile.</b> One stand with 463 stems per hectare showed two detected trees, because only 3.7% of it had canopy data. Check coverage before trusting an outlier. <span id="cov-note"></span></li>
+      <li><b>A file format that changes under you.</b> The Forest Centre moved its downloads and renewed its stand data model. The script failed loudly, which is the good outcome: it named the missing column instead of quietly comparing the wrong things.</li>
     </ul>
   </section>
 
