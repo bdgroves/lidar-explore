@@ -50,6 +50,7 @@ a:hover{color:var(--spruce)}
 .hero-key{font:500 .78rem/1.5 var(--display);color:#dfe5dc;background:rgba(22,32,28,.55);padding:8px 11px;border-radius:10px;backdrop-filter:blur(4px)}
 .hero-key i{display:inline-block;width:9px;height:9px;border-radius:50%;margin:0 5px 0 0;vertical-align:-1px}
 .hero-hint{position:absolute;left:50%;transform:translateX(-50%);bottom:10px;font:500 .74rem var(--display);color:#c9d2c5;opacity:.8;pointer-events:none}
+@media (max-width:600px){.hero-hint{display:none}.hero-tools{top:40px}}
 .hero-load{position:absolute;inset:0;display:grid;place-items:center;color:#c9d2c5;font:500 .9rem var(--display)}
 
 /* ---------- reading column ---------- */
@@ -84,6 +85,8 @@ canvas.plot{width:100%;height:auto;display:block;border-radius:8px;background:#f
 .seg button{font:600 .82rem/1 var(--display);border:1px solid var(--lichen);background:transparent;color:var(--spruce);padding:9px 12px;border-radius:999px;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--spruce);border-color:var(--spruce);color:var(--white)}
 
+.layer-toggle{display:inline-flex;align-items:center;gap:8px;font:600 .82rem/1 var(--display);margin:0 0 12px 6px;cursor:pointer}
+.layer-toggle input{accent-color:var(--moss);width:16px;height:16px}
 #map{height:min(70vh,620px);min-height:380px;border-radius:12px;background:#cfd6cb}
 .leaflet-container{font:500 .82rem/1.4 var(--display)}
 .stand-pop b{font-weight:800}
@@ -136,12 +139,12 @@ table.data td.r,table.data th.r{text-align:right}
 </header>
 
 <main>
-  <p class="col lede">Some people chase storms. I chase trees: through a million points of laser noise, into Finland's national forest inventory, and out the other side with numbers that survived contact with the real thing. The forest above is synthetic, with all <span class="num" data-k="truth">450</span> trees placed by a script, so the method can be graded. Then the same method goes to work on a real 36&nbsp;km&sup2; map sheet west of Helsinki and is checked, stand by stand, against what foresters measured on the ground.</p>
+  <p class="col lede">Some people chase storms. I chase trees: through a million points of laser noise, into Finland's national forest inventory, and out the other side with numbers that survived contact with the real thing. The forest above is synthetic, with all <span class="num" data-k="truth">450</span> trees placed by a script, so the method can be graded. Then the same method goes to work on a real 36&nbsp;km&sup2; map sheet west of Helsinki and is checked, stand by stand, against Finland's national forest inventory.</p>
   <p class="col small" id="hero-score"></p>
 
   <section class="col" aria-labelledby="f1">
     <h2 id="f1"><span class="n">Finding 1</span>The scoreboard lied</h2>
-    <p>Thin the laser points out and you'd expect tree detection to get worse. It didn't, at first. Recall went <em>up</em> as the cloud got sparser, while the height error quadrupled. A sparse canopy model has more empty cells than filled ones, and treating empty as zero creates fake peaks, some of which happen to land near real trees.</p>
+    <p>Thin the laser points out and you'd expect tree detection to get worse. It didn't, at first. Recall went <em>up</em> as the cloud got sparser, while the height error quadrupled. At half a point per square metre, about one cell in eight of the canopy model gets no laser return at all, and treating those holes as zero breaks crowns into fake peaks, some of which happen to land near real trees.</p>
     <p>Slide the density down and watch it happen: orange crosses are detections with no tree under them, orange rings are trees the method missed.</p>
   </section>
 
@@ -197,8 +200,8 @@ table.data td.r,table.data th.r{text-align:right}
       <button data-metric="bias" aria-pressed="true">Height: LiDAR minus inventory</button>
       <button data-metric="rate" aria-pressed="false">Stems found</button>
       <button data-metric="cls" aria-pressed="false">Development class</button>
-      <button id="chm-toggle" aria-pressed="true">Canopy height 2020</button>
     </div>
+    <label class="layer-toggle"><input type="checkbox" id="chm-toggle" checked> Canopy height model, 2020</label>
     <div id="map" role="region" aria-label="Interactive map of forest stands west of Helsinki"></div>
     <figcaption id="map-cap">Private forest stands on map sheet L4132D. Click a stand for its numbers. Stands without a fresh, usable inventory are drawn as outlines only.</figcaption>
   </section>

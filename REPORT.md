@@ -165,9 +165,10 @@ target, wide flat birch crowns the hardest.
 | 3.16 | 362 | 78.2% | 97.2% | 0.60 m |
 | 6.31 | 358 | 78.4% | 98.6% | **0.44 m** |
 
-Recall *increases* as data thins. At 0.5 points/m² a 1 m CHM has more empty
-cells than filled ones; nodata rendered as zero produces a rough surface with
-extra local maxima. Some land near real trees, so recall rises. Precision falls
+Recall *increases* as data thins. At 0.5 points/m² about 13% of the 1 m CHM's
+cells get no return at all (the PDAL writer fills the rest from points within
+~1.4 m); nodata rendered as zero produces a rough surface with extra local
+maxima. Some land near real trees, so recall rises. Precision falls
 from 98.6% to 92.0% and false positives rise from 5 to 32. Height RMSE
 quadruples.
 

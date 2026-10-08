@@ -48,9 +48,10 @@ corrected something the previous one made look settled.
 78.4% recall, 98.6% precision on the synthetic sample — but that stand is
 ~28 stems/ha, so crowns barely overlap. Thinning the cloud to 0.5 p/m2
 *raised* recall to 81.8% while precision fell to 92.0% and height RMSE
-quadrupled from 0.44 m to 1.63 m. A sparse CHM has more empty cells than
-filled ones; nodata-as-zero creates spurious local maxima, some of which land
-near real trees. Height RMSE is the honest density metric — recall just
+quadrupled from 0.44 m to 1.63 m. At that density about one cell in eight of
+the 1 m CHM gets no return at all (13%; PDAL's writer fills the rest from
+points within ~1.4 m), and nodata-as-zero turns those holes into spurious local
+maxima, some of which land near real trees. Height RMSE is the honest density metric — recall just
 looked honest.
 
 **2. Resolution beat point count, every time.**

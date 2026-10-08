@@ -36,8 +36,8 @@ That is not a result. That is a warning light. And the explanation is in the
 columns I hadn't been looking at: precision fell from 98.6% to 92.0%, false
 positives went from 5 to 32, and height error quadrupled from 0.44 m to 1.63 m.
 
-At half a point per square metre, a one-metre canopy raster has more empty cells
-than filled ones. Missing data gets written as zero. The surface becomes a field
+At half a point per square metre, about one cell in eight of a one-metre canopy
+raster gets no laser return at all. Missing data gets written as zero. The surface becomes a field
 of isolated spikes separated by artificial valleys, and that roughness generates
 extra local maxima. Some of them, by luck, land near real trees. Recall rises.
 

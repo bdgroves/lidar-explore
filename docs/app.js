@@ -338,7 +338,7 @@
       return html + "</table></div>";
     }
     var layer = L.geoJSON(stands, { style: style, onEachFeature: function (f, l) { l.bindPopup(pop(f.properties)); } }).addTo(map);
-    var legend = L.control({ position: "bottomleft" });
+    var legend = L.control({ position: "topright" });
     legend.onAdd = function () { this._div = L.DomUtil.create("div", "map-legend"); return this._div; };
     legend.addTo(map);
     function updLegend() {
@@ -356,9 +356,8 @@
         layer.setStyle(style); updLegend();
       });
     });
-    $("chm-toggle").addEventListener("click", function () {
-      var on = !map.hasLayer(chm); on ? chm.addTo(map) : map.removeLayer(chm);
-      this.setAttribute("aria-pressed", String(on));
+    $("chm-toggle").addEventListener("change", function () {
+      this.checked ? chm.addTo(map) : map.removeLayer(chm);
     });
     if (real.inventory_source) {
       var s2 = real.inventory_source, tot = s2.field + s2.remote_sensed + s2.other;
