@@ -200,10 +200,12 @@ def load_stands():
         # Development class now sits on the tree stand. The current-state stand
         # (class 2) carries it for nearly every stand; inventories mostly don't.
         dev = pd.read_sql_query("""
-            SELECT standid, developmentclass FROM treestand
+            SELECT standid, developmentclass, maintreespecies FROM treestand
             WHERE treestandclass = 2 AND developmentclass IS NOT NULL
         """, con).drop_duplicates("standid")
-        gdf = gdf.drop(columns=["developmentclass"], errors="ignore").merge(dev, on="standid", how="left")
+        dev["maintreespecies"] = pd.to_numeric(dev["maintreespecies"], errors="coerce")
+        gdf = (gdf.drop(columns=["developmentclass", "maintreespecies"], errors="ignore")
+                  .merge(dev, on="standid", how="left"))
         # Cutting proposals have their own table. NOTE: type 1 = "simuloitu
         # ehdotus, laskentasovellus", a proposal SIMULATED by the Forest
         # Centre's planning calculation, not a forester's field proposal

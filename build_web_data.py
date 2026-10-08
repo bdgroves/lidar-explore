@@ -280,7 +280,16 @@ def machine():
 
 
 def wa():
-    a = pd.read_csv("data/wa_fpa/fpa_slope_by_application.csv")
+    """The committed snapshot, not a fresh pull: DNR's layer keeps growing, and the
+    README's numbers (1,024 applications, AUC 0.879) describe this snapshot."""
+    import io
+    import subprocess
+    rel = "data/wa_fpa/fpa_slope_by_application.csv"
+    try:
+        a = pd.read_csv(io.StringIO(subprocess.run(["git", "show", f"HEAD:{rel}"], capture_output=True,
+                                                   text=True, check=True).stdout))
+    except Exception:                                      # noqa: BLE001
+        a = pd.read_csv(rel)
     out = {"source": "committed snapshot, data/wa_fpa/fpa_slope_by_application.csv",
            "apps": [[r(s, 1), int(f == "Y")] for s, f in zip(a["slope_max"], a["flag"])]}
     (OUT / "wa.json").write_text(json.dumps(out, separators=(",", ":")))
