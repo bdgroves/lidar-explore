@@ -50,15 +50,18 @@ jobs:
           done
           pixi run python fetch_open_data.py 2>&1 | tee logs/fetch.txt
       - name: Real track
+        continue-on-error: true
         run: |
           set -o pipefail
           pixi run python chm_change.py --all-pairs --by-height --no-viz --no-tif 2>&1 | tee logs/chm_change_all.txt
           pixi run python chm_change.py --a 2008 --b 2020 --bin-on 2015 --by-height --no-viz --no-tif 2>&1 | tee logs/chm_change_binned.txt
           pixi run python stand_validate.py --year 2020 --no-viz 2>&1 | tee logs/stand_validate.txt
+          pixi run python build_stands_joined.py 2>&1 | tee logs/build_stands_joined.txt
+          pixi run python machine_planning.py 2>&1 | tee logs/machine_planning.txt
       - name: WA FPA (from the committed tables)
         run: pixi run python wa_fpa.py --fetch 2>&1 | tee logs/wa_fpa.txt || true
       - name: Web data
-        if: hashFiles('build_web_data.py') != ''
+        if: always() && hashFiles('build_web_data.py') != ''
         run: pixi run python build_web_data.py 2>&1 | tee logs/build_web_data.txt
       - name: Publish results to the rebuild-results branch
         if: always()
@@ -67,6 +70,8 @@ jobs:
         run: |
           mkdir -p /tmp/r && cp -r logs /tmp/r/ 2>/dev/null || true
           cp data/*.csv /tmp/r/ 2>/dev/null || true
+          cp data/MV_*.gpkg /tmp/r/ 2>/dev/null || true
+          mkdir -p /tmp/r/docs && cp -r docs/data /tmp/r/docs/ 2>/dev/null || true
           cp data/*.png /tmp/r/ 2>/dev/null || true
           ls -la data data/metsakeskus > /tmp/r/files.txt 2>&1 || true
           cd /tmp/r && git init -q -b rebuild-results
@@ -74,7 +79,7 @@ jobs:
           git add -A && git commit -q -m "rebuild ${GITHUB_SHA::7}"
           git push -f -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" rebuild-results
       - name: Commit the page data
-        if: hashFiles('build_web_data.py') != ''
+        if: always() && hashFiles('docs/data/synthetic.json') != ''
         run: |
           git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/data
