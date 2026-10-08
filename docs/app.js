@@ -117,7 +117,7 @@
       });
       var missed = syn.truth.filter(function (t) { return !t[5]; }).map(function (t) { return [t[0], t[1], t[2] + t[3]]; });
       var markers = new THREE.Group();
-      markers.add(markerSet(hits, "hit", 5.5), markerSet(falses, "false", 8), markerSet(missed, "miss", 8));
+      markers.add(markerSet(hits, "hit", 4.5), markerSet(falses, "false", 12), markerSet(missed, "miss", 12));
       scene.add(markers);
       var m = syn.metrics;
       $("hero-key").innerHTML = '<i style="background:#fbfcfa;border:2px solid #1e2b27"></i>' + m.tp + ' found &nbsp; ' +
@@ -208,10 +208,10 @@
       var b = s.bounds, sx = w / (b[2] - b[0]), sy = h / (b[3] - b[1]);
       if (im.complete && im.naturalWidth) { ctx.imageSmoothingEnabled = false; ctx.drawImage(im, 0, 0, w, h); }
       function px(p) { return [(p[0] - b[0]) * sx, (b[3] - p[1]) * sy]; }
-      var r = Math.max(2.4, w / 190);
+      var r = Math.max(2, w / 260);
       s.dets.forEach(function (p) {
         var q = px(p);
-        if (p[2]) { ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, 7); ctx.fillStyle = C.white; ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = C.spruce; ctx.stroke(); }
+        if (p[2]) { ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, 7); ctx.fillStyle = C.white; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = C.spruce; ctx.stroke(); }
       });
       ctx.lineWidth = 2;
       s.missed.forEach(function (p) { var q = px(p); ctx.beginPath(); ctx.arc(q[0], q[1], r + 2, 0, 7); ctx.strokeStyle = C.paint; ctx.stroke(); });
@@ -235,7 +235,7 @@
     /* finding 2: 1 m against 2 m */
     var c2 = $("res-canvas");
     function drawRes() {
-      var P = prep(c2, 0.46), ctx = P.ctx, w = P.w, h = P.h, L = 46, R = 16, T = 18, B = 40;
+      var P = prep(c2, 0.5), ctx = P.ctx, w = P.w, h = P.h, L = 46, R = 16, T = 18, B = 66;
       ctx.clearRect(0, 0, w, h); ctx.fillStyle = C.plot; ctx.fillRect(0, 0, w, h);
       var one = steps.map(function (s) { return [s.density, s.recall]; });
       var two = d.two_m.map(function (s) { return [s.density, s.recall]; });
@@ -245,18 +245,27 @@
       var ly = function (v) { return T + (95 - v) / (95 - 45) * (h - T - B); };
       ctx.font = FONT; ctx.fillStyle = C.spruce; ctx.strokeStyle = "#d9ded5"; ctx.lineWidth = 1;
       [50, 60, 70, 80, 90].forEach(function (v) { ctx.beginPath(); ctx.moveTo(L, ly(v)); ctx.lineTo(w - R, ly(v)); ctx.stroke(); ctx.fillText(v + "%", 8, ly(v) + 4); });
-      [0.5, 1, 2, 4].forEach(function (v) { ctx.fillText(v + " p/m²", lx(v) - 18, h - 14); });
+      [0.5, 1, 2, 4].forEach(function (v) { ctx.fillText(v + " p/m²", lx(v) - 18, h - B + 20); });
       function line(pts, col, dash, label) {
         ctx.setLineDash(dash); ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.beginPath();
         pts.forEach(function (p, i) { var X = lx(p[0]), Y = ly(p[1]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke();
         ctx.setLineDash([]); ctx.fillStyle = col;
         pts.forEach(function (p) { ctx.beginPath(); ctx.arc(lx(p[0]), ly(p[1]), 3.2, 0, 7); ctx.fill(); });
-        var e = pts[pts.length - 1]; ctx.font = FONTB; ctx.fillText(label, Math.min(lx(e[0]) - 140, w - R - 150), ly(e[1]) - 8); ctx.font = FONT;
+        legendItems.push([col, dash, label]);
       }
+      var legendItems = [];
       line(one, C.moss, [], "1 m grid, all trees");
       line(two, C.paint, [], "2 m grid, all trees");
       line(oneB, C.moss, [5, 4], "1 m grid, birch");
       line(twoB, C.paint, [5, 4], "2 m grid, birch");
+      ctx.font = FONT; var lxp = L, ly0 = h - 26;
+      legendItems.forEach(function (it) {
+        var wd = ctx.measureText(it[2]).width + 46;
+        if (lxp + wd > w - R) { lxp = L; ly0 += 16; }
+        ctx.setLineDash(it[1]); ctx.strokeStyle = it[0]; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(lxp, ly0 - 4); ctx.lineTo(lxp + 22, ly0 - 4); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = C.spruce; ctx.fillText(it[2], lxp + 28, ly0); lxp += wd;
+      });
     }
     drawRes(); window.addEventListener("resize", drawRes);
   });
@@ -351,6 +360,21 @@
       var on = !map.hasLayer(chm); on ? chm.addTo(map) : map.removeLayer(chm);
       this.setAttribute("aria-pressed", String(on));
     });
+    if (real.inventory_source) {
+      var s2 = real.inventory_source, tot = s2.field + s2.remote_sensed + s2.other;
+      $("inv-source").textContent = "One caution on that correlation. Of the " + tot.toLocaleString("en-US") + " stands checked, " +
+        s2.remote_sensed.toLocaleString("en-US") + " have an inventory the Forest Centre interpreted from airborne laser data, and " + s2.field +
+        " were measured in the field. So this is partly laser checked against laser, which flatters agreement. The stem-count gap is still real: an interpretation would not invent hundreds of suppressed trees per hectare the laser can't see.";
+    }
+    if (real.proposals) {
+      $("proposal-source").textContent = "The Forest Centre's 2025 data release explains why. Its cutting proposals are labelled by origin, and of the " +
+        real.proposals.stands.toLocaleString("en-US") + " stands with one on this sheet, " + (real.proposals.field === 0 ? "none" : real.proposals.field === 1 ? "one" : real.proposals.field) +
+        " came from a forester in the field. The rest are simulated by the Forest Centre's planning calculation from the same inventory. A model that proposes cutting for mature stands will propose it for nearly every mature stand.";
+    }
+    if (real.validated_low_cov != null) {
+      $("cov-note").textContent = "The rebuild found " + real.validated_low_cov + " stands in the validation set with under 90% coverage; leaving them out moves median stem recovery from " +
+        fmt(real.stem_recovery_median) + "% to " + fmt(real.stem_recovery_median_full_cov) + "%. The next version of the check should filter on it.";
+    }
     $("map-cap").textContent = real.stands.toLocaleString("en-US") + " private forest stands on map sheet L4132D, " +
       real.validated.toLocaleString("en-US") + " of them with a fresh, usable inventory to check against (filled). Click a stand for its numbers.";
 

@@ -192,7 +192,18 @@ def real():
         "by_class": by_cls,
         "pool": len(pool), "pool_cut": int(pool["op_cut"].sum()),
         "low_coverage": int((sub["coverage_pct"] < 50).sum()),
+        "validated_low_cov": int((v["coverage_pct"] < 90).sum()),
+        "stem_recovery_median_full_cov": r(100 * v.loc[v["coverage_pct"] >= 90, "stem_ratio"].median(), 1),
     }
+    # Where the "ground truth" came from (2025 data model): 1 = measured in the field,
+    # 2 = remote-sensed (interpreted from airborne laser data), others = combined/derived.
+    if "obs_source" in v and v["obs_source"].notna().any():
+        src = v["obs_source"].astype(str).value_counts().to_dict()
+        summary["inventory_source"] = {"field": int(src.get("1", 0)), "remote_sensed": int(src.get("2", 0)),
+                                       "other": int(sum(n for k, n in src.items() if k not in ("1", "2")))}
+    if "op_cut_field" in sub:
+        summary["proposals"] = {"stands": int(sub["op_cut"].sum()),
+                                "field": int(sub["op_cut_field"].fillna(0).sum())}
     (OUT / "real.json").write_text(json.dumps(summary, indent=1))
     print("real:", json.dumps(summary))
 

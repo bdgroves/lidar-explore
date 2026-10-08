@@ -30,7 +30,7 @@ a:hover{color:var(--spruce)}
 :focus-visible{outline:3px solid var(--paint);outline-offset:2px;border-radius:2px}
 
 .bg-bar{display:flex;flex-wrap:wrap;gap:4px 18px;padding:10px 16px 0;font:500 .78rem/1.4 var(--display);font-stretch:100%;position:relative;z-index:5}
-.bg-bar a{color:var(--spruce);opacity:.7;text-decoration:none}
+.bg-bar a{color:#dfe5dc;opacity:.8;text-decoration:none}
 .bg-bar a:hover{opacity:1;text-decoration:underline}
 
 /* ---------- hero: the point cloud is the page's one loud thing ---------- */
@@ -149,6 +149,7 @@ table.data td.r,table.data th.r{text-align:right}
     <figure>
       <canvas class="plot" id="density-canvas" width="900" height="900" aria-label="Canopy height model with detected and missed trees"></canvas>
       <div class="legend"><span><i style="background:#fbfcfa;border:2px solid #1e2b27"></i>Detected, a real tree</span><span><i style="background:transparent;border:2px solid #e8642a;border-radius:2px;transform:rotate(45deg)"></i>Detected, no tree there</span><span><i style="background:transparent;border:2px solid #e8642a"></i>Real tree, missed</span></div>
+      <figcaption>The canopy height model of the synthetic stand, seen from above. The blank patch is Haukkalampi, the stand's lake: water swallows the laser, so it returns almost nothing.</figcaption>
     </figure>
     <div>
       <label for="density-range" class="small">Laser points per square metre</label>
@@ -176,7 +177,7 @@ table.data td.r,table.data th.r{text-align:right}
   <section class="col" aria-labelledby="f3">
     <h2 id="f3"><span class="n">Finding 3</span>Perfect ground, biased canopy</h2>
     <p>The Forest Centre publishes canopy height models of the same sheet from several flights. Comparing 2008 with 2020, bare ground agreed to the centimetre: the median offset was <span class="num">+0.00&nbsp;m</span> for every pair of years. That told me nothing about the trees.</p>
-    <p>Real trees slow down as they get tall. So I grouped the change by each pixel's height in a third, independent year (2015) and looked at growth per band. It came out nearly flat from the saplings to the giants, about a third of a metre a year even in stands already over 28&nbsp;m. A constant gain regardless of tree size is an offset, not biology: the 2008 flight measured the ground correctly and the canopy short.</p>
+    <p>Real trees slow down as they get tall. So I grouped the change by each pixel's height in a third, independent year (2015) and looked at growth per band. From 3&nbsp;m up it came out nearly flat, about a quarter to a third of a metre a year, even in stands already over 28&nbsp;m, where the forest can plausibly add half that. A constant gain regardless of tree size is an offset, not biology: the 2008 flight measured the ground correctly and the canopy short. (The lowest band, mostly open ground and seedlings in 2015, went slightly backwards, which a constant offset can't explain either: that pair of flights shouldn't be trusted for growth at all.)</p>
     <figure class="panel" style="margin:18px 0">
       <canvas class="plot" id="change-canvas" width="900" height="420" aria-label="Height gain per year by starting height band"></canvas>
       <figcaption id="change-cap">Height gain per year, 2008 to 2020, grouped by height in 2015. The dashed line is what mature boreal forest can plausibly add.</figcaption>
@@ -187,7 +188,8 @@ table.data td.r,table.data th.r{text-align:right}
   <section class="col" aria-labelledby="f4">
     <h2 id="f4"><span class="n">Finding 4</span>It nails height and misses most stems, and that's physics</h2>
     <p>On the real sheet, the method finds about <span class="num" data-k="stem_recovery_median">16</span>% of the stems the inventory says are there. That sounds like failure until you remember what a laser from an aircraft sees: the tops of the trees that reach the canopy. The suppressed trees underneath don't make peaks. Recovery climbs as stands mature and crowns separate.</p>
-    <p>Height is a different story. The mean height of the detected tree tops tracks the foresters' mean height closely, about a metre high, with a correlation of <span class="num" data-k="det_h_r">0.96</span>. Averaging every pixel instead sits below the inventory, because it averages in the gaps. Same raster, opposite sign.</p>
+    <p>Height is a different story. The mean height of the detected tree tops tracks the inventory's mean height closely, about a metre high, with a correlation of <span class="num" data-k="det_h_r">0.96</span>. Averaging every pixel instead sits below the inventory, because it averages in the gaps. Same raster, opposite sign.</p>
+    <p class="note" id="inv-source">One caution on that correlation. The inventory is the Forest Centre's, and most of it isn't a tape measure in the woods.</p>
   </section>
 
   <section class="wide" aria-label="Map of the stands on sheet L4132D">
@@ -202,11 +204,12 @@ table.data td.r,table.data th.r{text-align:right}
   </section>
 
   <section class="col" aria-labelledby="f5">
-    <h2 id="f5"><span class="n">And one clean negative</span>The foresters had already decided</h2>
-    <p>I built a ranking to pick which mature stands to harvest and scored it against the stands foresters actually proposed for cutting. It looked fine, until I counted the pool it was choosing from. Once stands are filtered to development class&nbsp;04, regeneration-mature, nearly every one is already on the cutting list. Here is that pool, one square per stand:</p>
+    <h2 id="f5"><span class="n">And one clean negative</span>The plan had already decided</h2>
+    <p>I built a ranking to pick which mature stands to harvest and scored it against the stands the forest plan proposes for cutting. It looked fine, until I counted the pool it was choosing from. Once stands are filtered to development class&nbsp;04, regeneration-mature, nearly every one is already on the cutting list. Here is that pool, one square per stand:</p>
     <div class="grid472" id="grid472" aria-label="Eligible mature stands, coloured by whether foresters proposed cutting"></div>
     <p class="small" id="grid472-cap"></p>
-    <p>With a base rate that high there's nothing left to beat. The forester's maturity call is the list, and the canopy model adds no lift on top of it. I'm reporting that because it's true, not because it flatters the method.</p>
+    <p>With a base rate that high there's nothing left to beat: development class is the list, and the canopy model adds no lift on top of it. I'm reporting that because it's true, not because it flatters the method.</p>
+    <p id="proposal-source">The Forest Centre's 2025 data release explains why. Its cutting proposals are labelled by origin, and on this sheet they're simulated by the Forest Centre's planning calculation from the same inventory, not marked by a forester walking the stand. A model that proposes cutting for mature stands will propose it for nearly every mature stand.</p>
   </section>
 
   <section class="col" aria-labelledby="machines">
@@ -244,11 +247,12 @@ table.data td.r,table.data th.r{text-align:right}
     <h2 id="lessons">Things that silently corrupt results</h2>
     <ul class="lessons">
       <li><b>Joining the wrong inventory.</b> Finland's stand records come in three flavours: observed, projected to 2026, projected to 2036. Join a projection and you're comparing a laser to a simulation.</li>
-      <li><b>Stale ground truth.</b> Observations run from 1999 to 2024. A 2020 raster against a 1999 measurement reads as detection error when it's two decades of growth. Keeping only inventories within six years of the flight moved the height correlation from 0.907 to 0.962.</li>
+      <li><b>Stale ground truth.</b> Observations run from 1999 to 2024. A 2020 raster against a 1999 measurement reads as detection error when it's two decades of growth. In the original run, keeping only inventories within six years of the flight moved the height correlation from 0.907 to 0.962.</li>
       <li><b>Absence isn't permission.</b> The stand file covers private forest only. Nuuksio National Park simply isn't in it, so a missing stand is treated as off-limits, never as open.</li>
       <li><b>One decision, counted many times.</b> Washington's flag belongs to the application, not the harvest unit. Scoring units counted some decisions seventeen times.</li>
       <li><b>Nulls that look like findings.</b> Stands too small to measure carried a null label, and "not summer-trafficable" is true for a null. Two phantom wet stands.</li>
-      <li><b>A stand on the edge of the tile.</b> One stand with 462 stems per hectare showed two detected trees, because only 3.7% of it had canopy data. Check coverage before trusting an outlier.</li>
+      <li><b>A stand on the edge of the tile.</b> One stand with 462 stems per hectare showed two detected trees, because only 3.7% of it had canopy data. Check coverage before trusting an outlier. <span id="cov-note"></span></li>
+      <li><b>A file format that changes under you.</b> The Forest Centre moved its downloads and renewed its stand data model in 2025. The script failed loudly, which is the good outcome: it named the missing column instead of quietly comparing the wrong things.</li>
     </ul>
   </section>
 
