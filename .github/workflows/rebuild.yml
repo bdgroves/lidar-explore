@@ -45,7 +45,7 @@ jobs:
         run: |
           set -o pipefail
           for u in https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi.zip \
-                   https://juuri-storagezone-files-prod.s3.eu-west-1.amazonaws.com/Public/Latvusmalli/Latvusmalli_indeksi.zip; do
+                   https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi/Latvusmalli_indeksi.zip; do
             curl -sSIL -A "Mozilla/5.0" "$u" | grep -iE "^HTTP|^location|^server|^content-length" | tee -a logs/probe.txt
           done
           pixi run python fetch_open_data.py 2>&1 | tee logs/fetch.txt

@@ -14,7 +14,7 @@ licensed 5 p laser data. Tiles are 6 km x 6 km, roughly 55-75 MB each.
 Coordinate system is EPSG:3067, same as the synthetic sample.
 
 Index download (once, ~70 MB zipped):
-  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi.zip
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi/Latvusmalli_indeksi.zip
 Unzip it and point INDEX_GPKG at the .gpkg inside.
 
 Usage:
@@ -51,7 +51,7 @@ def connect():
         raise SystemExit(
             f"Missing {INDEX_GPKG}\n"
             "Download and unzip:\n"
-            "  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi.zip"
+            "  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi/Latvusmalli_indeksi.zip"
         )
     return sqlite3.connect(INDEX_GPKG)
 

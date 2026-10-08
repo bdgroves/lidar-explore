@@ -27,7 +27,9 @@ from pathlib import Path
 import fetch_metsakeskus as fm
 
 DATA = Path("data")
-INDEX_ZIP_URL = "https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi.zip"
+# Addresses as listed on metsakeskus.fi > Paikkatietoaineistot (checked Oct 2026; the
+# index used to sit one folder up, and the stand data under Metsavarakuviot/).
+INDEX_ZIP_URL = "https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi/Latvusmalli_indeksi.zip"
 # avoin.metsakeskus.fi redirects into this public bucket; some networks are refused at
 # the front door but not here.
 S3 = "https://juuri-storagezone-files-prod.s3.eu-west-1.amazonaws.com/Public"
@@ -38,10 +40,11 @@ DTM_VRT = "https://vm0160.kaj.pouta.csc.fi/mml/korkeusmalli/km2/2020/km2_2020.vr
 # The stand inventory is published per map sheet (karttalehti). The exact file
 # name isn't documented in one place, so try the known patterns in order.
 MV_CANDIDATES = [
+    "https://avoin.metsakeskus.fi/aineistot/MV/Karttalehti/MV_{sheet}.gpkg",
+    "https://avoin.metsakeskus.fi/aineistot/MV/Karttalehti/MV_{sheet}.zip",
+    "https://avoin.metsakeskus.fi/aineistot/MV/Karttalehti/{sheet}.gpkg",
+    "https://avoin.metsakeskus.fi/aineistot/MV/Karttalehti/{sheet}.zip",
     "https://avoin.metsakeskus.fi/aineistot/Metsavarakuviot/Karttalehti/MV_{sheet}.gpkg",
-    "https://avoin.metsakeskus.fi/aineistot/Metsavarakuviot/Karttalehti/MV_{sheet}.zip",
-    "https://avoin.metsakeskus.fi/aineistot/Metsavarakuviot/Karttalehti/{sheet}.gpkg",
-    "https://avoin.metsakeskus.fi/aineistot/Metsavarakuviot/Karttalehti/{sheet}.zip",
 ]
 
 
