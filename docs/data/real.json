@@ -35,6 +35,17 @@
  "pool": 547,
  "pool_cut": 545,
  "low_coverage": 110,
+ "validated_low_cov": 119,
+ "stem_recovery_median_full_cov": 16.7,
+ "inventory_source": {
+  "field": 1,
+  "remote_sensed": 1488,
+  "other": 0
+ },
+ "proposals": {
+  "stands": 1280,
+  "field": 1
+ },
  "chm_bounds": [
   60.269175,
   24.501093,
