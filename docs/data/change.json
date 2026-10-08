@@ -1,0 +1,42 @@
+{
+ "ground_offset_m": 0.0,
+ "bare_pixels": 7308050,
+ "bands": [
+  {
+   "band": "0\u20133 m",
+   "rate": -0.038,
+   "cap": 0.6,
+   "area_pct": 23.2
+  },
+  {
+   "band": "3\u20138 m",
+   "rate": 0.247,
+   "cap": 0.6,
+   "area_pct": 9.0
+  },
+  {
+   "band": "8\u201315 m",
+   "rate": 0.319,
+   "cap": 0.5,
+   "area_pct": 25.1
+  },
+  {
+   "band": "15\u201322 m",
+   "rate": 0.296,
+   "cap": 0.35,
+   "area_pct": 29.8
+  },
+  {
+   "band": "22\u201328 m",
+   "rate": 0.263,
+   "cap": 0.25,
+   "area_pct": 11.2
+  },
+  {
+   "band": "28 m +",
+   "rate": 0.308,
+   "cap": 0.15,
+   "area_pct": 1.8
+  }
+ ]
+}
