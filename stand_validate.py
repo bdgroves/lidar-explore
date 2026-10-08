@@ -119,6 +119,8 @@ def load_stands():
         gdf = gdf.to_crs(3067)
 
     con = sqlite3.connect(GPKG)
+    ts_cols = {r[1] for r in con.execute("PRAGMA table_info(treestand)")}
+    new_model = "treestandclass" in ts_cols      # the Forest Centre's 2025 data model
 
     # OBSERVED inventory lives in treestratum, not treestandsummary.
     # treestandsummary exists ONLY for projected states (type 2 = 2026,
@@ -126,20 +128,39 @@ def load_stands():
     # Joining a summary would therefore mean comparing a 2020 raster to a
     # simulation of 2026 -- plausible-looking and wrong.
     #
+    # In the 2025 data model the same split is treestandclass (1 = inventory,
+    # 2 = current state, 3 = projection), the date is treedatadate, and some
+    # stands carry more than one inventory: the most recent one is used.
+    #
     # stemcount is null in the strata, so density is derived from basal area
     # and mean diameter:   N = G / (pi/4 * d^2)
     # This is approximate: Finnish "keskilapimitta" is basal-area weighted,
     # so N is a stand-level estimate rather than a stem tally.
-    strata = pd.read_sql_query("""
-        SELECT ts.standid, ts.date AS obs_date,
-               st.treespecies, st.storey, st.age,
-               st.basalarea, st.meandiameter, st.meanheight, st.volume
-        FROM treestand ts
-        JOIN treestratum st ON st.treestandid = ts.treestandid
-        WHERE ts.type = 1
-          AND st.basalarea IS NOT NULL AND st.basalarea > 0
-          AND st.meandiameter IS NOT NULL AND st.meandiameter > 0
-    """, con)
+    if new_model:
+        strata = pd.read_sql_query("""
+            WITH obs AS (
+                SELECT treestandid, standid, treedatadate, treestanddatasource,
+                       ROW_NUMBER() OVER (PARTITION BY standid ORDER BY treedatadate DESC) AS k
+                FROM treestand WHERE treestandclass = 1)
+            SELECT obs.standid, obs.treedatadate AS obs_date, obs.treestanddatasource AS obs_source,
+                   st.treespecies, st.storey, st.age,
+                   st.basalarea, st.meandiameter, st.meanheight, st.volume
+            FROM obs JOIN treestratum st ON st.treestandid = obs.treestandid
+            WHERE obs.k = 1
+              AND st.basalarea IS NOT NULL AND st.basalarea > 0
+              AND st.meandiameter IS NOT NULL AND st.meandiameter > 0
+        """, con)
+    else:
+        strata = pd.read_sql_query("""
+            SELECT ts.standid, ts.date AS obs_date, NULL AS obs_source,
+                   st.treespecies, st.storey, st.age,
+                   st.basalarea, st.meandiameter, st.meanheight, st.volume
+            FROM treestand ts
+            JOIN treestratum st ON st.treestandid = ts.treestandid
+            WHERE ts.type = 1
+              AND st.basalarea IS NOT NULL AND st.basalarea > 0
+              AND st.meandiameter IS NOT NULL AND st.meandiameter > 0
+        """, con)
 
     d_m = strata["meandiameter"] / 100.0                 # cm -> m
     strata["stems_ha"] = strata["basalarea"] / (np.pi / 4.0 * d_m ** 2)
@@ -149,6 +170,7 @@ def load_stands():
     g = strata.groupby("standid")
     inv = g.agg(
         obs_date=("obs_date", "first"),
+        obs_source=("obs_source", "first"),
         n_strata=("treespecies", "size"),
         basalarea=("basalarea", "sum"),
         stemcount=("stems_ha", "sum"),
@@ -174,15 +196,35 @@ def load_stands():
     restricted = pd.read_sql_query(
         "SELECT DISTINCT standid, 1 AS restricted FROM restriction", con)
 
-    # maintype 1 = hakkuu (cutting). Sub-types vary; any cutting proposal is
-    # enough to call the stand "professionally proposed for harvest".
-    ops = pd.read_sql_query("""
-        SELECT standid,
-               MAX(CASE WHEN maintype = 1 THEN 1 ELSE 0 END) AS op_cut,
-               MIN(CASE WHEN maintype = 1 THEN proposalyear END) AS cut_year,
-               COUNT(*) AS n_ops
-        FROM operation GROUP BY standid
-    """, con)
+    if new_model:
+        # Development class now sits on the tree stand. The current-state stand
+        # (class 2) carries it for nearly every stand; inventories mostly don't.
+        dev = pd.read_sql_query("""
+            SELECT standid, developmentclass FROM treestand
+            WHERE treestandclass = 2 AND developmentclass IS NOT NULL
+        """, con).drop_duplicates("standid")
+        gdf = gdf.drop(columns=["developmentclass"], errors="ignore").merge(dev, on="standid", how="left")
+        # Cutting proposals have their own table. NOTE: type 1 = "simuloitu
+        # ehdotus, laskentasovellus", a proposal SIMULATED by the Forest
+        # Centre's planning calculation, not a forester's field proposal
+        # (type 2). On L4132D every proposal but one is type 1.
+        ops = pd.read_sql_query("""
+            SELECT standid, 1 AS op_cut,
+                   MIN(cuttingproposalyear) AS cut_year,
+                   COUNT(*) AS n_ops,
+                   MAX(CASE WHEN type = 2 THEN 1 ELSE 0 END) AS op_cut_field
+            FROM cutting GROUP BY standid
+        """, con)
+    else:
+        # maintype 1 = hakkuu (cutting). Sub-types vary; any cutting proposal is
+        # enough to call the stand "professionally proposed for harvest".
+        ops = pd.read_sql_query("""
+            SELECT standid,
+                   MAX(CASE WHEN maintype = 1 THEN 1 ELSE 0 END) AS op_cut,
+                   MIN(CASE WHEN maintype = 1 THEN proposalyear END) AS cut_year,
+                   COUNT(*) AS n_ops
+            FROM operation GROUP BY standid
+        """, con)
     con.close()
 
     gdf = (gdf.merge(inv, on="standid", how="left")

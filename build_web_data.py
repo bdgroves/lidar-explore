@@ -235,6 +235,33 @@ def real():
     print(f"real: chm_2020.png {dw} x {dh}")
 
 
+def change():
+    """Finding 3: 2008 -> 2020 change by height band, binned on the independent 2015 epoch,
+    computed exactly as chm_change.py --a 2008 --b 2020 --bin-on 2015 --by-height does."""
+    import chm_change as cc
+    try:
+        a, _, _ = cc.read("2008")
+        b, _, _ = cc.read("2020")
+        basis, _, _ = cc.read("2015")
+    except SystemExit:
+        print("change: epochs missing, skipped")
+        return
+    off, n_bare, _ = cc.ground_offset(a, b)
+    diff = (b - a) - off
+    valid = np.isfinite(diff) & np.isfinite(basis)
+    cap = {(0, 3): 0.6, (3, 8): 0.6, (8, 15): 0.5, (15, 22): 0.35, (22, 28): 0.25, (28, 60): 0.15}
+    bands = []
+    for lo, hi in cc.HEIGHT_BINS:
+        m = (basis >= lo) & (basis < hi) & valid
+        if m.any():
+            bands.append({"band": f"{lo}\u2013{hi} m" if hi < 60 else f"{lo} m +",
+                          "rate": r(float(np.mean(diff[m])) / 12, 3), "cap": cap[(lo, hi)],
+                          "area_pct": r(100 * m.sum() / valid.sum(), 1)})
+    out = {"ground_offset_m": r(off, 2), "bare_pixels": n_bare, "bands": bands}
+    (OUT / "change.json").write_text(json.dumps(out, indent=1))
+    print("change:", out)
+
+
 def machine():
     p = Path("data/machine_planning.csv")
     if not p.exists():
@@ -265,8 +292,14 @@ def main() -> int:
     x0, y0 = synthetic()
     density(x0, y0)
     real()
+    change()
     machine()
     wa()
+    import datetime
+    import os
+    (OUT / "build.json").write_text(json.dumps({
+        "date": datetime.date.today().isoformat(),
+        "commit": os.environ.get("GITHUB_SHA", "local")[:7]}))
     return 0
 
 
