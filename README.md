@@ -4,6 +4,10 @@
   <img src="assets/lidar-explore-banner.jpg" alt="LiDAR Explore: from point clouds to forest intelligence" width="100%"/>
 </p>
 
+**[Explore it live: brooksgroves.com/lidar-explore](https://brooksgroves.com/lidar-explore/)** — spin the
+point cloud, thin the laser, click any stand. ·
+[The story](https://brooksgroves.com/blog/finding-the-trees.html)
+
 **Some people chase storms. I chase trees — through a hundred million points
 of laser noise, into a national forest inventory, and out the other side with
 numbers that survived contact with reality.**
@@ -13,7 +17,14 @@ where every tree's exact location is already known — then drives straight into
 the real thing: raw airborne LiDAR over a live 6x6 km slice of Finland,
 validated stand-by-stand against 1,295 real records from the Finnish Forest
 Centre's national inventory. No held-out demo set. National data, real stands,
-real foresters' own harvest calls used as the benchmark.
+the national forest plan's own cutting proposals used as the benchmark.
+
+> **Rebuilt October 2026.** The whole pipeline now reruns from the open data on
+> GitHub Actions. Everything reproduced, and the Forest Centre's 2025 data
+> release corrected two claims this README used to make: the cutting proposals
+> are simulated by the Forest Centre's planning calculation, not foresters'
+> field calls, and nearly all of the "observed" inventory was interpreted from
+> airborne laser data. See [Rebuilt from scratch](#rebuilt-from-scratch-october-2026).
 
 The workflow mirrors what commercial forestry operators build at scale: raw
 point cloud -> ground/canopy separation -> individual-tree detection ->
@@ -80,8 +91,79 @@ opposite sign; the stem-based estimator correlates better.
 flatters the method.** Harvest ranking was benchmarked against 5,059 real
 cutting proposals. Once stands are filtered to development class 04
 (regeneration-mature), 471 of 472 eligible stands were already proposed for
-cutting — base rate 100%, lift 1.00x. The forester's own maturity call
-determines the list; the CHM adds no discriminating power on top of it.
+cutting — base rate 100%, lift 1.00x. The development class determines the
+list; the CHM adds no discriminating power on top of it. (The 2025 data
+release shows why: the proposals are simulated by the Forest Centre's planning
+calculation from the inventory, so a mature stand is nearly always proposed.)
+
+---
+
+## Rebuilt from scratch, October 2026
+
+`.github/workflows/rebuild.yml` reruns everything on a clean Linux machine:
+the synthetic track from the sample in this repo, then the real track from
+the open downloads (`fetch_open_data.py`: CHM index and every epoch for the
+sheet, the stand inventory, the NLS 1 m DTM). Logs and tables land on the
+[`rebuild-results`](../../tree/rebuild-results) branch, and
+`build_web_data.py` writes the data behind the
+[project page](https://brooksgroves.com/lidar-explore/) into `docs/data`.
+
+| | original run | rebuilt |
+|---|---|---|
+| synthetic: recall / precision / height RMSE | 78.4% / 98.6% / 0.44 m | identical |
+| density study, every row | | identical |
+| stands on the sheet / private forest | 1,840 / 2,165 ha | identical |
+| stands with a usable, fresh inventory | 1,295 | 1,489 |
+| stem recovery, median | 16.3% | 16.2% |
+| detected-stem height vs inventory | +1.19 m, r = 0.962 | +1.18 m, r = 0.959 |
+| whole-pixel CHM height vs inventory | −3.95 m, r = 0.901 | −4.01 m, r = 0.906 |
+| eligible class-04 stands already proposed | 471 of 472 | 545 of 547 |
+| 2008→2020 gain, 3 m and up, binned on 2015 | +0.25 to +0.32 m/yr | +0.25 to +0.32 m/yr |
+| class 04 with a cutting proposal (machine planning) | 653 | 653 (652 large enough to sample) |
+| season: summer / dry / frozen | 609 / 43 / 1 | 608 / 43 / 1 |
+| access: conventional / winch / steep | 476 / 145 / 32 | 476 / 145 / 31 |
+| both wet and steep | 3 | 3 |
+| WA FPA, committed snapshot | 1,024 apps, AUC 0.879 | identical |
+| WA FPA, fresh pull | | 1,049 apps, AUC 0.878 |
+
+What changed, and what it taught:
+
+* **The Forest Centre moved its downloads.** The CHM index is now under
+  `Latvusmalli/Latvusmalli_indeksi/` and the stand data under `MV/` (was
+  `Metsavarakuviot/`). Both scripts point at the new addresses.
+* **The stand data model changed (2025).** `treestand.type` became
+  `treestandclass`, the date became `treedatadate`, development class and main
+  species moved onto the tree stand, and cutting proposals got their own
+  `cutting` table. `stand_validate.py` reads both models. Some stands now carry
+  more than one inventory; the newest is used, which is why 1,489 stands
+  qualify instead of 1,295.
+* **The "ground truth" is laser-derived.** Of the 1,489 validated stands,
+  1,488 have an inventory the Forest Centre *interpreted from airborne laser
+  data*; one was measured in the field. (The field-measured inventories are
+  mostly old, so the six-year freshness filter drops them.) Height agreement is
+  therefore largely laser against laser. The stem-count shortfall is a
+  different matter: the inventory's stem numbers come from models calibrated on
+  field sample plots, which count the suppressed trees that individual-tree
+  detection from above can't separate.
+* **The cutting proposals are simulated.** In `cutting.type`, 1 means
+  "simuloitu ehdotus, laskentasovellus": a proposal from the Forest Centre's
+  planning calculation. All but one proposal on the sheet are type 1. That is
+  the mechanism behind the saturated harvest benchmark.
+* **Coverage is reported but not filtered.** 119 validated stands have under
+  90% CHM coverage. Dropping them moves stem recovery from 16.2% to 16.7% and
+  leaves the height result unchanged. The next version of the check should
+  filter on `coverage_pct`.
+* **New epochs exist.** The index now lists 2018, 2021 and 2024 partial tiles
+  for L4132D and an `uusin` (latest) composite.
+* **`stands_joined.gpkg` is reproducible.** It was first assembled by hand in
+  QGIS; `build_stands_joined.py` now rebuilds it from the open stand data.
+
+```powershell
+pixi run synthetic    # inspect, DEM + CHM, detection, density study
+pixi run fetch        # the open data for L4132D
+pixi run validate     # stand validation, 2020 CHM
+pixi run web          # docs/data for the project page
+```
 
 ---
 
@@ -206,8 +288,8 @@ licensed data.
 | 03 | varttunut kasvatusmetsikko | advanced thinning stand |
 | 04 | uudistuskypsa metsikko | **regeneration-mature** |
 
-Class 04 replaced an earlier Chapman-Richards age model. A forester's own
-maturity judgement beats inverting a growth curve with an assumed site index
+Class 04 replaced an earlier Chapman-Richards age model. The inventory's own
+maturity class beats inverting a growth curve with an assumed site index
 (which also clamped at age 181 for any stand taller than the assumed H100).
 
 ---
@@ -275,8 +357,8 @@ documented above.
 ## Where do the machines go? Terrain planning for the stands already chosen
 
 The harvest-ranking result above is a clean negative: filtered to development
-class 04, the CHM adds no discriminating power over the forester's own
-maturity call. **Which** stand to cut is already decided.
+class 04, the CHM adds no discriminating power over the inventory's own
+maturity class. **Which** stand to cut is already decided.
 
 Terrain answers a question the plan does not. In Nordic forestry the dominant
 environmental problem is not stand selection, it is **rutting** -- a loaded

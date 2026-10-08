@@ -23,14 +23,33 @@ Established:
 - 2008 epoch has a canopy-specific additive bias invisible to ground
   calibration; neither epoch pair supports an absolute growth rate
 - detection recovers ~16% of inventory stems, rising 12% → 17% with maturity
-- detected-stem height: +1.37 m vs inventory mean, r = 0.907
-- whole-pixel CHM height: −3.81 m vs inventory mean, r = 0.841
+- detected-stem height: +1.19 m vs inventory mean, r = 0.962 (rebuilt Oct 2026 on
+  the 2025 data release: +1.18 m, r = 0.959, 1,489 stands)
+- whole-pixel CHM height: −3.95 m vs inventory mean, r = 0.901 (rebuilt: −4.01 m, r = 0.906)
 - harvest benchmark saturated: 471/472 eligible stands already proposed for
   cutting, lift 1.00× — development class does the work, not the CHM
 
 ---
 
+**Rebuild + project page — Oct 2026.** `rebuild.yml` reruns everything on
+GitHub Actions from the open data (`fetch_open_data.py`); results and logs go to
+the `rebuild-results` branch, page data to `docs/data` via `build_web_data.py`.
+The page is `docs/index.html` + `docs/app.js` (GitHub Pages, main /docs, served at
+brooksgroves.com/lidar-explore/). The 2025 Forest Centre data model is handled in
+`stand_validate.load_stands()`. Two corrections came out of it: the cutting
+proposals are simulated (`cutting.type` 1), and 1,488 of 1,489 validated
+inventories are laser-interpreted, one field-measured. See README, "Rebuilt from
+scratch".
+
 ## Open threads, roughly by value
+
+**0. Filter the validation set on coverage.** 119 validated stands have <90%
+CHM coverage (recovery 16.2% -> 16.7% without them). Add the filter to
+`stand_validate.py` and say so in the README table.
+
+**0b. Field-measured subset.** Only one fresh field-measured inventory exists on
+L4132D. A sheet (or a looser freshness window) with more field plots would test
+height agreement without laser-against-laser circularity.
 
 **A. Reconcile the two sample sizes.** Validation stats use 1,295 stands
 (vintage-filtered); the height bracketing used 1,706 (unfiltered). Recompute the

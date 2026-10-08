@@ -364,7 +364,7 @@
       var s2 = real.inventory_source, tot = s2.field + s2.remote_sensed + s2.other;
       $("inv-source").textContent = "One caution on that correlation. Of the " + tot.toLocaleString("en-US") + " stands checked, " +
         s2.remote_sensed.toLocaleString("en-US") + " have an inventory the Forest Centre interpreted from airborne laser data, and " + s2.field +
-        " were measured in the field. So this is partly laser checked against laser, which flatters agreement. The stem-count gap is still real: an interpretation would not invent hundreds of suppressed trees per hectare the laser can't see.";
+        (s2.field === 1 ? " was" : " were") + " measured in the field. So this is largely laser checked against laser, which flatters the agreement. The stem-count gap is a different matter: the inventory's stem numbers come from models calibrated on field sample plots, which count the suppressed trees that a laser looking down at the canopy can't pick out one by one.";
     }
     if (real.proposals) {
       $("proposal-source").textContent = "The Forest Centre's 2025 data release explains why. Its cutting proposals are labelled by origin, and of the " +
