@@ -1,0 +1,121 @@
+Loading stands and inventory...
+/home/runner/work/lidar-explore/lidar-explore/.pixi/envs/default/lib/python3.12/site-packages/pyogrio/raw.py:200: UserWarning: Measured (M) geometry types are not supported. Original type 'Measured 3D Polygon' is converted to 'Polygon Z'
+  return ogr_read(
+  1,840 stands, 1,821 with observed inventory, 145 restricted
+Reading CHM 2020...
+  6000 x 6000 px @ 1.0m
+Detecting stems and aggregating to stands...
+==========================================================================
+STAND VALIDATION vs Finnish Forest Centre inventory   (CHM 2020)
+==========================================================================
+
+Stands intersecting AOI: 1,840   2,165 ha of private forest
+
+Development class distribution:
+     02 young thinning              41 stands     57.4 ha
+     03 advanced thinning          746 stands    864.2 ha
+     04 regeneration-mature        727 stands    798.6 ha
+     A0 open/clearcut                3 stands      1.8 ha  [attrs unusable]
+     ER ?                            1 stands      1.2 ha
+     T1 seedling <1.3m              13 stands     15.2 ha  [attrs unusable]
+     T2 seedling >1.3m              15 stands     22.9 ha
+     Y1 seedling w/ overstory       18 stands     57.5 ha
+    nan ?                          276 stands    346.3 ha
+
+Inventory vintage (observed strata vs CHM epoch):
+  observation years   1999 - 2024
+  stands with inventory    1821 of 1840
+  within 6 yr of CHM       1793   <- usable for validation
+  too stale, excluded        28
+  (comparing a 2020 raster to a 1999 measurement would read as
+   detection error when it is really 21 years of forest growth)
+
+Eligibility funnel:
+  all stands                           1840
+  regeneration-mature (class 04)        727
+    minus restricted                    655
+    minus tiny (<0.3 ha)               565
+    minus too few stems detected        547  ELIGIBLE
+
+==========================================================================
+DETECTION vs INVENTORY   (1489 stands with usable attributes)
+==========================================================================
+
+Stem density (stems/ha):
+  inventory   mean     554   median     498
+  detected    mean      80   median      83
+  detection rate  16.2% of inventory stems (median)
+  -> local maxima on a 1m CHM see dominant and codominant crowns only;
+     suppressed understory stems are invisible. This is the expected
+     direction and magnitude, not a failure.
+
+Mean canopy height (m):
+  inventory   mean  19.47
+  CHM         mean  15.46
+  difference  mean  -4.01   median  -4.03   sd  1.87
+  correlation r = 0.906
+
+  Estimator comparison (n = 1489):
+    detected stems only   20.65m  (+1.18)  r = 0.959
+    inventory mean        19.47m
+    all CHM pixels        15.46m  (-4.01)  r = 0.906
+    -> crown apexes sit above a stem-weighted mean; whole-pixel
+       mean sits below because it averages canopy gaps.
+  NOTE: CHM mean height includes gaps and understory pixels, while
+        inventory meanheight is a stand-level stem-weighted mean.
+        A systematic offset here is expected, not an error.
+
+By development class:
+  class     n  inv_stems  det_stems   rate   inv_h   chm_h
+  --------------------------------------------------------
+     02    36        906         83    11%   11.28    7.26
+     03   623        641         87    15%   18.32   14.90
+     04   599        447         70    17%   22.82   18.53
+     T2     7        950         33     4%   10.36    3.01
+     Y1    14        458         75    19%   19.37   13.92
+
+==========================================================================
+BENCHMARK vs PROFESSIONAL MANAGEMENT PLAN
+==========================================================================
+
+Cutting proposed (2026-2035):
+  across all stands >= 0.3 ha   1116 of 1579  (71%)
+  within the ELIGIBLE pool          545 of 547  (100%)
+
+Our top 15 vs foresters' proposals (scored within eligible pool):
+  also proposed for cutting     15
+  not proposed                   0
+  precision                   100%
+  base rate within pool       100%
+  lift over random-in-pool    1.00x
+  CAUTION: the eligible pool is already almost all proposed for
+  cutting, so precision near 100% is close to unavoidable and lift
+  cannot exceed ~1.00x. The development class is doing the work;
+  this benchmark cannot show the CHM adding much on top of it.
+
+  For comparison, development class 04 alone:
+    618 stands, 91% proposed for cutting
+    (this is the forester's own maturity call, so high agreement
+     here mostly confirms the class is doing the work, not the CHM)
+
+Top 15 harvest candidates:
+     standid     ha  cls       sp  age  inv_h     vol  st/ha  cut?
+  ------------------------------------------------------------------
+    38778770   0.33   04   spruce  103   28.7     639     63   YES
+    38778366   0.40   04   spruce  101   28.8     546     65   YES
+    38778139   0.31   04   spruce   91   27.2     570     54   YES
+    38778740   0.38   04   spruce   86   26.9     528     45   YES
+    38778308   1.70   04   spruce  106   29.6     542     56   YES
+     3356850   0.84   04   spruce   94   27.2     555     50   YES
+    38778566   0.47   04   spruce   86   26.7     515     43   YES
+    38778739   0.30   04   spruce   81   25.8     490     46   YES
+    38779069   0.42   04   spruce   82   25.5     489     38   YES
+    38778950   0.45   04   spruce   92   27.2     516     57   YES
+    38778889   1.17   04   spruce   89   26.7     533     44   YES
+    38779048   1.03   04   spruce   92   26.5     542     59   YES
+    38778876   0.56   04   spruce   78   24.4     501     41   YES
+    38778186   0.90   04   spruce  105   29.6     489     47   YES
+    38779293   0.67   04   spruce   90   26.9     476     64   YES
+==========================================================================
+
+Wrote data/stand_validation.csv (1,840 rows)

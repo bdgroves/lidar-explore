@@ -1,0 +1,35 @@
+data:
+total 572804
+drwxr-xr-x  5 runner runner      4096 Oct  8 14:20 .
+drwxr-xr-x 11 runner runner      4096 Oct  8 14:17 ..
+-rw-r--r--  1 runner runner 502751232 Oct  8 14:17 Latvusmalli_indeksi.gpkg
+-rw-r--r--  1 runner runner   7528448 Oct  8 14:18 MV_L4132D.gpkg
+-rw-r--r--  1 runner runner      2216 Oct  8 14:17 density_study.csv
+-rw-r--r--  1 runner runner    302951 Oct  8 14:19 machine_planning.csv
+-rw-r--r--  1 runner runner  28874953 Oct  8 14:19 machine_planning_slope.tif
+-rw-r--r--  1 runner runner  31623540 Oct  8 14:19 machine_planning_twi.tif
+drwxr-xr-x  2 runner runner      4096 Oct  8 14:18 metsakeskus
+-rw-r--r--  1 runner runner    655488 Oct  8 14:17 nuuksio_chm.tif
+-rw-r--r--  1 runner runner    644214 Oct  8 14:17 nuuksio_dem.tif
+-rw-r--r--  1 runner runner     17804 Oct  8 14:17 nuuksio_detected_trees.csv
+-rw-r--r--  1 runner runner    793431 Oct  8 14:17 nuuksio_detection.png
+-rw-r--r--  1 runner runner    999267 Oct  8 14:17 nuuksio_overview.png
+-rw-r--r--  1 runner runner   9299144 Oct  8 14:16 nuuksio_sample.laz
+-rw-r--r--  1 runner runner     21514 Oct  8 14:16 nuuksio_tree_truth.csv
+-rw-r--r--  1 runner runner    424535 Oct  8 14:18 stand_validation.csv
+-rw-r--r--  1 runner runner   2564096 Oct  8 14:18 stands_joined.gpkg
+drwxr-xr-x  2 runner runner      4096 Oct  8 14:19 wa_fpa
+drwxr-xr-x  2 runner runner      4096 Oct  8 14:16 web
+
+data/metsakeskus:
+total 308456
+drwxr-xr-x 2 runner runner     4096 Oct  8 14:18 .
+drwxr-xr-x 5 runner runner     4096 Oct  8 14:20 ..
+-rw-r--r-- 1 runner runner 61098025 Oct  8 14:17 CHM_L4132D_2008.tif
+-rw-r--r-- 1 runner runner 69842648 Oct  8 14:17 CHM_L4132D_2015.tif
+-rw-r--r-- 1 runner runner  2934004 Oct  8 14:17 CHM_L4132D_2018.tif
+-rw-r--r-- 1 runner runner 74573493 Oct  8 14:17 CHM_L4132D_2020.tif
+-rw-r--r-- 1 runner runner  7112022 Oct  8 14:18 CHM_L4132D_2021.tif
+-rw-r--r-- 1 runner runner  1426056 Oct  8 14:18 CHM_L4132D_2024.tif
+-rw-r--r-- 1 runner runner 74567393 Oct  8 14:18 CHM_L4132D_uusin.tif
+-rw-r--r-- 1 runner runner 24277068 Oct  8 14:18 DTM_L4132D.tif

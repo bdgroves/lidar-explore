@@ -1,0 +1,19 @@
+Reading: nuuksio_sample.laz
+
+Points:     1,034,754
+Density:    6.3 pts/m²
+Area:       405m × 403m  (16.3 ha)
+Elevation:  49.7m to 298.0m  (relief: 248.4m)
+CRS:        ETRS89-FIN [EUREF-FIN] / TM35FIN(E,N)
+LAS ver:    1.4, point format: 6
+
+Classifications:
+   2 (ground          ):    677,528  ( 65.5%)
+   3 (low veg         ):     90,263  (  8.7%)
+   5 (high veg        ):    260,546  ( 25.2%)
+   7 (noise           ):         25  (  0.0%)
+   9 (water           ):      6,392  (  0.6%)
+
+✓  Decent density.
+✓  25% high veg — good forest tile.
+✓  65% ground — good for CHM.

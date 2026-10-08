@@ -1,0 +1,27 @@
+== CHM index
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Latvusmalli_indeksi/Latvusmalli_indeksi.zip -> data/Latvusmalli_indeksi.zip (70.8 MB)
+  unzipped Latvusmalli_indeksi.gpkg -> data/Latvusmalli_indeksi.gpkg
+== CHM tiles
+  file                           year     MB  mean_h  max_h
+  ----------------------------------------------------------
+  CHM_L4132D_2008                2008   59.6    9.78  39.25
+  CHM_L4132D_2015                2015   68.2   12.25  39.85
+  CHM_L4132D_2018                2018    2.9   13.02  36.85
+  CHM_L4132D_2020                2020   55.0   12.37  41.95
+  CHM_L4132D_2021                2021    7.0   12.46  39.18
+  CHM_L4132D_2024                2024    1.4   11.92  36.93
+  CHM_L4132D_uusin              uusin   72.8   12.32  41.81
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Karttalehti/2008/CHM_L4132D_2008.tif -> data/metsakeskus/CHM_L4132D_2008.tif (61.1 MB)
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Karttalehti/2015/CHM_L4132D_2015.tif -> data/metsakeskus/CHM_L4132D_2015.tif (69.8 MB)
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Karttalehti/2018/CHM_L4132D_2018.tif -> data/metsakeskus/CHM_L4132D_2018.tif (2.9 MB)
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Karttalehti/2020/CHM_L4132D_2020.tif -> data/metsakeskus/CHM_L4132D_2020.tif (74.6 MB)
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Karttalehti/2021/CHM_L4132D_2021.tif -> data/metsakeskus/CHM_L4132D_2021.tif (7.1 MB)
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Karttalehti/2024/CHM_L4132D_2024.tif -> data/metsakeskus/CHM_L4132D_2024.tif (1.4 MB)
+  https://avoin.metsakeskus.fi/aineistot/Latvusmalli/Karttalehti/uusin/CHM_L4132D_uusin.tif -> data/metsakeskus/CHM_L4132D_uusin.tif (74.6 MB)
+== stand inventory
+  https://avoin.metsakeskus.fi/aineistot/MV/Karttalehti/MV_L4132D.gpkg -> HTTP Error 403: Forbidden
+  https://juuri-storagezone-files-prod.s3.eu-west-1.amazonaws.com/Public/MV/Karttalehti/MV_L4132D.gpkg -> HTTP Error 403: Forbidden
+  https://avoin.metsakeskus.fi/aineistot/MV/Karttalehti/MV_L4132D.zip -> data/MV_L4132D.zip (2.9 MB)
+  unzipped MV_L4132D.gpkg -> data/MV_L4132D.gpkg
+== DTM
+  DTM -> data/metsakeskus/DTM_L4132D.tif (6000 x 6000)

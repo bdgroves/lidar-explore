@@ -1,0 +1,49 @@
+reading DTM_L4132D.tif
+  grid (3000, 3000) at 2 m
+[2K[2K  filling depressions + flow accumulation
+[2K[2K[2K[2K[2K[2K  slope p50/p95: 5.8 / 24.1 deg
+  TWI   p50/p95: 4.9 / 12.1
+  wet threshold  TWI > 9.47 (85th pct)
+  steep threshold slope > 24.11 deg (95th pct)
+  1840 stands
+
+wrote /home/runner/work/lidar-explore/lidar-explore/data/machine_planning.csv  (1836 stands)
+
+stands in devclass 04 with a cutting proposal: 652
+
+-- season (wetness) --
+season
+summer-trafficable      608
+dry season preferred     43
+frozen-ground only        1
+
+-- access (slope) --
+access
+conventional             476
+winch assist advised     145
+steep - review access     31
+
+wettest scheduled stands (schedule for frozen ground):
+ standid  poly_ha  slope_mean  wet_frac  steep_frac               season       access
+  511435 1.184606    3.124864  0.354839    0.000000   frozen-ground only conventional
+ 3356912 0.383450    3.841534  0.213665    0.001242 dry season preferred conventional
+38778906 1.122631    1.818871  0.204991    0.000000 dry season preferred conventional
+43625620 0.177848    6.998793  0.198198    0.000000 dry season preferred conventional
+26167294 0.228028    5.274006  0.169912    0.000000 dry season preferred conventional
+ 3358770 0.764731    3.182511  0.163703    0.020397 dry season preferred conventional
+ 3356226 0.588362    5.028302  0.159184    0.008163 dry season preferred conventional
+38779322 5.684942    4.904418  0.154409    0.005560 dry season preferred conventional
+
+steepest scheduled stands (access review):
+ standid  poly_ha  slope_mean  wet_frac  steep_frac             season                access
+38778315 0.366251   30.890320  0.000000    0.886710 summer-trafficable steep - review access
+38778835 0.533467   30.940903  0.000000    0.795335 summer-trafficable steep - review access
+ 3356792 0.261965   33.146652  0.000000    0.780822 summer-trafficable steep - review access
+ 3356735 0.264053   32.085365  0.000000    0.769697 summer-trafficable steep - review access
+38778185 0.581030   27.049593  0.000000    0.629477 summer-trafficable steep - review access
+38778868 1.021559   25.331917  0.003535    0.618617 summer-trafficable steep - review access
+38778184 0.184927   29.966686  0.000000    0.578261 summer-trafficable steep - review access
+38779111 0.193125   26.043808  0.000000    0.551653 summer-trafficable steep - review access
+
+stands that are BOTH wet and steep: 3
+wrote data/machine_planning_slope.tif and _twi.tif

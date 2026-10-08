@@ -1,0 +1,27 @@
+Wrote data/nuuksio_detected_trees.csv: 358 detections
+
+============================================================
+DETECTION RESULTS
+============================================================
+  Ground truth trees:  450
+  Detected peaks:      358
+  True positives:      353
+  False positives:     5  (detections with no matching tree)
+  False negatives:     97  (real trees we missed)
+
+  Recall:     78.4%   ← % of real trees found
+  Precision:  98.6%   ← % of detections that were real
+  F1:         87.4%
+
+Recall by species (bigger trees are easier):
+  spruce:  88.2%  (164/186 found, avg height 30.9m)
+  pine  :  73.1%  (133/182 found, avg height 24.6m)
+  birch :  68.3%  (56/82 found, avg height 24.7m)
+
+Height error (detected - truth), for matched trees:
+  mean bias:  -0.24m
+  RMSE:       0.44m
+  90% within: ±0.77m
+============================================================
+
+Saved data/nuuksio_detection.png

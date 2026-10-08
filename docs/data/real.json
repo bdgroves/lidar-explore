@@ -1,0 +1,55 @@
+{
+ "stands": 1840,
+ "private_ha": 2165.0,
+ "validated": 1489,
+ "stem_recovery_median": 16.2,
+ "inv_stems_median": 498.0,
+ "det_h_bias": 1.18,
+ "det_h_r": 0.959,
+ "chm_h_bias": -4.01,
+ "chm_h_r": 0.906,
+ "det_h_mean": 20.65,
+ "inv_h_mean": 19.47,
+ "by_class": {
+  "02": {
+   "n": 36,
+   "rate": 10.8
+  },
+  "03": {
+   "n": 623,
+   "rate": 15.0
+  },
+  "04": {
+   "n": 599,
+   "rate": 16.7
+  },
+  "T2": {
+   "n": 7,
+   "rate": 3.9
+  },
+  "Y1": {
+   "n": 14,
+   "rate": 18.6
+  }
+ },
+ "pool": 547,
+ "pool_cut": 545,
+ "low_coverage": 110,
+ "validated_low_cov": 119,
+ "stem_recovery_median_full_cov": 16.7,
+ "inventory_source": {
+  "field": 1,
+  "remote_sensed": 1488,
+  "other": 0
+ },
+ "proposals": {
+  "stands": 1280,
+  "field": 1
+ },
+ "chm_bounds": [
+  60.269175,
+  24.501093,
+  60.325006,
+  24.613552
+ ]
+}

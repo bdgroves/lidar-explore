@@ -1,0 +1,124 @@
+==================================================================
+CANOPY CHANGE  2008 -> 2015
+==================================================================
+
+Epoch means:  2008  9.78m   2015 12.25m   delta +2.47m
+
+Ground check (bare in 2008, allowed 2.0m drift by 2015):
+  bare pixels     7,282,206 (20.23% of area)
+  median offset   +0.00m   <- systematic bias between flights
+  95th pct spread 1.33m
+
+Change classes (offset-corrected):
+  harvest      942,511 px      94.3 ha    2.6%
+  loss         605,794 px      60.6 ha    1.7%
+  stable    14,867,606 px    1486.8 ha   41.3%
+  growth    15,632,591 px    1563.3 ha   43.4%
+  regrowth   3,951,498 px     395.1 ha   11.0%
+
+Magnitudes:
+  mean gain where growing  +5.05m
+  mean loss where losing   -8.99m
+  net change over all area +2.47m
+==================================================================
+
+  NOTE: bins defined by epoch 2008, which also enters the
+        difference. Expect some regression-to-the-mean drag.
+
+Change by starting height, binned on 2008 height:
+          band       pixels  % area  mean gain    m/yr  verdict
+  ----------------------------------------------------------------------
+          0-3m   11,088,147   30.8%     +2.99m  +0.427  ok
+          3-8m    4,404,022   12.2%     +4.04m  +0.577  ok
+         8-15m    9,694,627   26.9%     +2.61m  +0.373  ok
+        15-22m    8,295,200   23.0%     +1.40m  +0.200  ok
+        22-28m    2,320,976    6.4%     +0.53m  +0.075  ok
+        28-60m      197,028    0.5%     -0.07m  -0.009  ok
+
+  All bands within plausible increment — change looks real.
+
+==================================================================
+CANOPY CHANGE  2015 -> 2020
+==================================================================
+
+Epoch means:  2015 12.25m   2020 12.37m   delta +0.12m
+
+Ground check (bare in 2015, allowed 2.0m drift by 2020):
+  bare pixels     6,985,259 (19.40% of area)
+  median offset   +0.00m   <- systematic bias between flights
+  95th pct spread 0.76m
+
+Change classes (offset-corrected):
+  harvest    1,284,316 px     128.4 ha    3.6%
+  loss       2,257,904 px     225.8 ha    6.3%
+  stable    25,718,216 px    2571.8 ha   71.4%
+  growth     5,953,164 px     595.3 ha   16.5%
+  regrowth     786,400 px      78.6 ha    2.2%
+
+Magnitudes:
+  mean gain where growing  +2.85m
+  mean loss where losing   -6.01m
+  net change over all area +0.12m
+==================================================================
+
+  NOTE: bins defined by epoch 2015, which also enters the
+        difference. Expect some regression-to-the-mean drag.
+
+Change by starting height, binned on 2015 height:
+          band       pixels  % area  mean gain    m/yr  verdict
+  ----------------------------------------------------------------------
+          0-3m    8,356,598   23.2%     +0.52m  +0.103  ok
+          3-8m    3,228,261    9.0%     +0.54m  +0.107  ok
+         8-15m    9,041,427   25.1%     +0.19m  +0.038  ok
+        15-22m   10,710,063   29.8%     -0.13m  -0.025  NEGATIVE - trees do not shrink
+        22-28m    4,022,427   11.2%     -0.49m  -0.099  NEGATIVE - trees do not shrink
+        28-60m      641,224    1.8%     -0.19m  -0.037  NEGATIVE - trees do not shrink
+
+  3 band(s) show NEGATIVE increment.
+  Worst: 22-28m at -0.099 m/yr.
+  Standing forest does not lose height. Likely causes:
+    - leaf-on vs leaf-off acquisition (deciduous canopy collapses)
+    - lower pulse density in the later epoch, missing crown apexes
+    - different CHM processing or smoothing
+  Growth rates from this pair are SUPPRESSED and should not be
+  used as current annual increment for management decisions.
+
+==================================================================
+CANOPY CHANGE  2008 -> 2020
+==================================================================
+
+Epoch means:  2008  9.78m   2020 12.37m   delta +2.59m
+
+Ground check (bare in 2008, allowed 2.0m drift by 2020):
+  bare pixels     7,308,050 (20.30% of area)
+  median offset   +0.00m   <- systematic bias between flights
+  95th pct spread 1.35m
+
+Change classes (offset-corrected):
+  harvest    1,382,310 px     138.2 ha    3.8%
+  loss         692,554 px      69.3 ha    1.9%
+  stable    13,256,845 px    1325.7 ha   36.8%
+  growth    16,742,895 px    1674.3 ha   46.5%
+  regrowth   3,925,396 px     392.5 ha   10.9%
+
+Magnitudes:
+  mean gain where growing  +5.33m
+  mean loss where losing   -9.77m
+  net change over all area +2.59m
+==================================================================
+
+  NOTE: bins defined by epoch 2008, which also enters the
+        difference. Expect some regression-to-the-mean drag.
+
+Change by starting height, binned on 2008 height:
+          band       pixels  % area  mean gain    m/yr  verdict
+  ----------------------------------------------------------------------
+          0-3m   11,088,147   30.8%     +2.99m  +0.249  ok
+          3-8m    4,404,022   12.2%     +4.47m  +0.372  ok
+         8-15m    9,694,627   26.9%     +2.92m  +0.243  ok
+        15-22m    8,295,200   23.0%     +1.39m  +0.116  ok
+        22-28m    2,320,976    6.4%     +0.31m  +0.026  ok
+        28-60m      197,028    0.5%     -0.15m  -0.012  ok
+
+  All bands within plausible increment — change looks real.
+

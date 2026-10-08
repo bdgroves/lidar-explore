@@ -1,0 +1,11 @@
+Building DEM → data/nuuksio_dem.tif
+  677,528 ground points binned
+Building CHM → data/nuuksio_chm.tif
+  1,030,373 points processed
+Rendering visualization...
+Saved data/nuuksio_overview.png
+
+CHM stats:
+  mean:   4.9m
+  max:    36.1m
+  % >5m:  18.0%  (canopy cover)

@@ -1,0 +1,14 @@
+synthetic: 320,000 of 1,034,754 points, 358 detections, recall 78.4%, precision 98.6%, RMSE 0.44 m
+density step 13:  0.49 p/m2  recall 81.8%  precision 92.0%  RMSE 1.63 m  empty 13.0%
+density step  6:  1.06 p/m2  recall 78.9%  precision 97.0%  RMSE 1.14 m  empty 6.4%
+density step  3:  2.11 p/m2  recall 79.1%  precision 98.6%  RMSE 0.76 m  empty 5.4%
+density step  2:  3.17 p/m2  recall 78.2%  precision 97.2%  RMSE 0.6 m  empty 5.0%
+density step  1:  6.34 p/m2  recall 78.4%  precision 98.6%  RMSE 0.44 m  empty 4.7%
+/home/runner/work/lidar-explore/lidar-explore/.pixi/envs/default/lib/python3.12/site-packages/pyogrio/raw.py:200: UserWarning: Measured (M) geometry types are not supported. Original type 'Measured 3D Polygon' is converted to 'Polygon Z'
+  return ogr_read(
+real: {"stands": 1840, "private_ha": 2165.0, "validated": 1489, "stem_recovery_median": 16.2, "inv_stems_median": 498.0, "det_h_bias": 1.18, "det_h_r": 0.959, "chm_h_bias": -4.01, "chm_h_r": 0.906, "det_h_mean": 20.65, "inv_h_mean": 19.47, "by_class": {"02": {"n": 36, "rate": 10.8}, "03": {"n": 623, "rate": 15.0}, "04": {"n": 599, "rate": 16.7}, "T2": {"n": 7, "rate": 3.9}, "Y1": {"n": 14, "rate": 18.6}}, "pool": 547, "pool_cut": 545, "low_coverage": 110, "validated_low_cov": 119, "stem_recovery_median_full_cov": 16.7, "inventory_source": {"field": 1, "remote_sensed": 1488, "other": 0}, "proposals": {"stands": 1280, "field": 1}}
+real: 1840 stands -> stands.geojson
+real: chm_2020.png 2071 x 2075
+change: {'ground_offset_m': 0.0, 'bare_pixels': 7308050, 'bands': [{'band': '0–3 m', 'rate': -0.038, 'cap': 0.6, 'area_pct': 23.2}, {'band': '3–8 m', 'rate': 0.247, 'cap': 0.6, 'area_pct': 9.0}, {'band': '8–15 m', 'rate': 0.319, 'cap': 0.5, 'area_pct': 25.1}, {'band': '15–22 m', 'rate': 0.296, 'cap': 0.35, 'area_pct': 29.8}, {'band': '22–28 m', 'rate': 0.263, 'cap': 0.25, 'area_pct': 11.2}, {'band': '28 m +', 'rate': 0.308, 'cap': 0.15, 'area_pct': 1.8}]}
+machine: {'scheduled': 652, 'season': {'summer-trafficable': 608, 'dry season preferred': 43, 'frozen-ground only': 1}, 'access': {'conventional': 476, 'winch assist advised': 145, 'steep - review access': 31}, 'both': 3}
+wa: 1024 applications, 50.6% flagged
